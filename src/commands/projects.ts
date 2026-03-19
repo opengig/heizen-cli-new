@@ -3,9 +3,48 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { createDashboardClient } from '../api/dashboard.js';
 import { requireDashboardAuth } from '../config/index.js';
+import { cacheProjects, getCachedProjects } from '../db/index.js';
+import type { DashboardProject } from '../schemas/dashboard.js';
+
+async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
+  if (active === undefined) {
+    const cached = await getCachedProjects();
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      return cached as DashboardProject[];
+    }
+  }
+  const token = requireDashboardAuth();
+  const client = createDashboardClient(token);
+  const projects = await client.getProjects(active);
+  if (active === undefined) {
+    await cacheProjects(projects as unknown[]);
+  }
+  return projects;
+}
 
 const projectsCommand = new Command('projects')
   .description('Dashboard project commands (api.studio.heizen.work)')
+  .action(async () => {
+    try {
+      const projects = await getProjectsCachedOrFetch(false);
+      if (projects.length === 0) {
+        console.log(chalk.gray('No projects found.'));
+        return;
+      }
+      const table = new Table({
+        head: ['#', 'ID', 'Title', 'Unique Name'],
+        colWidths: [4, 28, 30, 20],
+      });
+      projects.forEach((p, i) => {
+        table.push([i + 1, p.id, p.title ?? '-', p.uniqueName ?? '-']);
+      });
+      console.log(table.toString());
+      console.log(chalk.dim('Use hz link <#> to link a project to this repo.'));
+    } catch (err) {
+      console.error(chalk.red((err as Error).message));
+      process.exit(2);
+    }
+  })
   .addCommand(
     new Command('list')
       .description('Fetch all projects from Studio Heizen')
@@ -13,14 +52,11 @@ const projectsCommand = new Command('projects')
       .option('--inactive', 'Show only inactive projects')
       .action(async (opts) => {
         try {
-          const token = requireDashboardAuth();
-          const client = createDashboardClient(token);
-
           let active: boolean | undefined;
           if (opts.active) active = true;
           else if (opts.inactive) active = false;
 
-          const projects = await client.getProjects(active);
+          const projects = await getProjectsCachedOrFetch(active);
 
           if (projects.length === 0) {
             console.log(chalk.gray('No projects found.'));
@@ -28,12 +64,19 @@ const projectsCommand = new Command('projects')
           }
 
           const table = new Table({
-            head: ['ID', 'Title', 'Unique Name', 'Active'],
-            colWidths: [28, 30, 20, 8],
+            head: ['#', 'ID', 'Title', 'Unique Name', 'Active'],
+            colWidths: [4, 28, 30, 20, 8],
           });
 
-          for (const p of projects) {
-            table.push([p.id, p.title ?? '-', p.uniqueName ?? '-', p.active !== undefined ? String(p.active) : '-']);
+          for (let i = 0; i < projects.length; i++) {
+            const p = projects[i];
+            table.push([
+              i + 1,
+              p.id,
+              p.title ?? '-',
+              p.uniqueName ?? '-',
+              p.active !== undefined ? String(p.active) : '-',
+            ]);
           }
           console.log(table.toString());
         } catch (err) {

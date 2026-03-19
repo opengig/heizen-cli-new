@@ -55,12 +55,24 @@ export const UserStorySchema = z.object({
   updatedAt: z.string().optional(),
 });
 
-/** Dashboard project (from GET /projects) */
+/** Sprint (from Project.sprints) */
+export const SprintSchema = z.object({
+  id: z.string(),
+  name: z.string().optional(),
+  status: z.string().optional(),
+  startDate: z.string().optional(),
+  endDate: z.string().optional(),
+});
+export type Sprint = z.infer<typeof SprintSchema>;
+
+/** Dashboard project (from GET /projects) - may include sprints */
 export const DashboardProjectSchema = z.object({
   id: z.string(),
   title: z.string().optional(),
   uniqueName: z.string().optional(),
   active: z.boolean().optional(),
+  isArchived: z.boolean().optional(),
+  sprints: z.array(SprintSchema).optional(),
 });
 
 /** Response from GET /projects */
@@ -72,7 +84,7 @@ export const ProjectsResponseSchema = z.union([
   }),
 ]);
 
-/** Sprint board column */
+/** Sprint board column (legacy) */
 export const SprintBoardColumnSchema = z.object({
   id: z.string().optional(),
   title: z.string(),
@@ -81,8 +93,24 @@ export const SprintBoardColumnSchema = z.object({
   tasks: z.array(z.any()).optional(),
 });
 
-/** Response from GET /tasks/sprint-board/{sprintId} */
+/** FeatureTask - task with stories (sprint board response) */
+export const FeatureTaskSchema = z.object({
+  id: z.string(),
+  title: z.string().optional(),
+  description: z.string().optional(),
+  type: z.string().optional(),
+  storyStatus: z.string().optional(),
+  sprintId: z.string().optional(),
+  projectId: z.string().optional(),
+  stories: z.array(UserStorySchema).optional(),
+  createdAt: z.string().optional(),
+  updatedAt: z.string().optional(),
+});
+export type FeatureTask = z.infer<typeof FeatureTaskSchema>;
+
+/** Response from GET /tasks/sprint-board/{sprintId} - array of FeatureTask or legacy format */
 export const SprintBoardResponseSchema = z.union([
+  z.array(FeatureTaskSchema),
   z.object({
     columns: z.array(SprintBoardColumnSchema).optional(),
     sprint: z

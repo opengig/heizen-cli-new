@@ -4,6 +4,7 @@ import {
   SprintBoardResponseSchema,
   UserStorySchema,
   type DashboardProject,
+  type FeatureTask,
   type SprintBoardColumn,
   type UserStory,
 } from '../schemas/dashboard.js';
@@ -53,6 +54,7 @@ export function createDashboardClient(token: string) {
     },
 
     async getSprintBoard(sprintId: string): Promise<{
+      tasks: FeatureTask[];
       columns: SprintBoardColumn[];
       sprint?: { id: string; name?: string };
     }> {
@@ -67,11 +69,25 @@ export function createDashboardClient(token: string) {
 
       const data = parsed.data;
       if (Array.isArray(data)) {
-        return { columns: data as SprintBoardColumn[] };
+        const arr = data as unknown[];
+        const asTasks = arr as FeatureTask[];
+        const asColumns = arr as SprintBoardColumn[];
+        return {
+          tasks: asTasks,
+          columns: asColumns,
+          sprint: { id: sprintId },
+        };
       }
       const obj = data as Record<string, unknown>;
+      const columns = (obj.columns ?? []) as SprintBoardColumn[];
+      const tasks: FeatureTask[] = columns.map((c) => ({
+        id: c.id ?? '',
+        title: c.title,
+        stories: c.stories ?? [],
+      }));
       return {
-        columns: (obj.columns ?? []) as SprintBoardColumn[],
+        tasks,
+        columns,
         sprint: obj.sprint as { id: string; name?: string } | undefined,
       };
     },

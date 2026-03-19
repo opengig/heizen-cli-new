@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { createWorklogClient } from '../api/worklog.js';
+import { createWorklogClient, worklogLogin } from '../api/worklog.js';
 import { requireWorklogAuth, getWorklogUserIdFromCookie } from '../config/index.js';
 
 function getDefaultDateRange(): { start: string; end: string } {
@@ -19,6 +19,32 @@ function getDefaultDateRange(): { start: string; end: string } {
 
 const worklogCommand = new Command('worklog')
   .description('Worklog commands (worklog.opengig.work)')
+  .addCommand(
+    new Command('login')
+      .description('Login and get cookie for HEIZEN_WORKLOG_COOKIE')
+      .requiredOption('-e, --email <email>', 'Email')
+      .requiredOption('-p, --password <password>', 'Password')
+      .action(async (opts) => {
+        try {
+          const cookies = await worklogLogin(opts.email, opts.password);
+
+          if (cookies.length === 0) {
+            console.error(chalk.red('No cookies received. Login may have failed.'));
+            process.exit(2);
+          }
+
+          const cookieString = cookies
+            .map((c) => c.split(';')[0])
+            .filter(Boolean)
+            .join('; ');
+          console.log(chalk.green('Login successful. Add to .env:'));
+          console.log(chalk.cyan(`HEIZEN_WORKLOG_COOKIE=${cookieString}`));
+        } catch (err) {
+          console.error(chalk.red((err as Error).message));
+          process.exit(2);
+        }
+      })
+  )
   .addCommand(
     new Command('fetch')
       .description('Fetch worklogs for date range')

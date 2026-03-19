@@ -3,6 +3,16 @@ import chalk from 'chalk';
 import worklogCommand from './commands/worklog.js';
 import projectsCommand from './commands/projects.js';
 import sprintCommand from './commands/sprint.js';
+import {
+  startCommand,
+  wlistCommand,
+  pauseCommand,
+  resumeCommand,
+  removeCommand,
+  doneCommand,
+} from './commands/work.js';
+import { linkCommand, sprintsCommand } from './commands/tm.js';
+import { taskCommand, storyCommand } from './commands/story.js';
 
 process.exitCode = 0;
 
@@ -63,10 +73,30 @@ function inheritHelpAndExit(cmd: Command, parent: Command) {
 inheritHelpAndExit(worklogCommand, program);
 inheritHelpAndExit(projectsCommand, program);
 inheritHelpAndExit(sprintCommand, program);
+inheritHelpAndExit(startCommand, program);
+inheritHelpAndExit(wlistCommand, program);
+inheritHelpAndExit(pauseCommand, program);
+inheritHelpAndExit(resumeCommand, program);
+inheritHelpAndExit(removeCommand, program);
+inheritHelpAndExit(doneCommand, program);
+inheritHelpAndExit(linkCommand, program);
+inheritHelpAndExit(sprintsCommand, program);
+inheritHelpAndExit(taskCommand, program);
+inheritHelpAndExit(storyCommand, program);
 
 program.addCommand(worklogCommand);
 program.addCommand(projectsCommand);
 program.addCommand(sprintCommand);
+program.addCommand(startCommand);
+program.addCommand(wlistCommand);
+program.addCommand(pauseCommand);
+program.addCommand(resumeCommand);
+program.addCommand(removeCommand);
+program.addCommand(doneCommand);
+program.addCommand(linkCommand);
+program.addCommand(sprintsCommand);
+program.addCommand(taskCommand);
+program.addCommand(storyCommand);
 
 try {
   program.parse();

@@ -10,6 +10,33 @@ import {
 
 const BASE_URL = 'https://worklog.opengig.work';
 
+/** Login and return Set-Cookie header values for use in HEIZEN_WORKLOG_COOKIE */
+export async function worklogLogin(email: string, password: string): Promise<string[]> {
+  const formData = new FormData();
+  formData.append('email', email);
+  formData.append('password', password);
+
+  const res = await fetch(`${BASE_URL}/login.data`, {
+    method: 'POST',
+    headers: { Accept: 'application/json, text/plain, */*' },
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Worklog login failed ${res.status}: ${text}`);
+  }
+
+  await res.json(); // consume body
+
+  const headers = res.headers as Headers & { getSetCookie?: () => string[] };
+  if (typeof headers.getSetCookie === 'function') {
+    return headers.getSetCookie();
+  }
+  const setCookie = res.headers.get('set-cookie');
+  return setCookie ? [setCookie] : [];
+}
+
 export function createWorklogClient(cookie: string) {
   const client: AxiosInstance = axios.create({
     baseURL: BASE_URL,

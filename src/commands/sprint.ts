@@ -3,9 +3,76 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { createDashboardClient } from '../api/dashboard.js';
 import { requireDashboardAuth } from '../config/index.js';
+import { getWorkspaceState, setActiveSprint, getCachedProjects, cacheProjects } from '../db/index.js';
+import type { DashboardProject } from '../schemas/dashboard.js';
+
+async function getProjectsCachedOrFetch(): Promise<DashboardProject[]> {
+  const cached = await getCachedProjects();
+  if (cached && Array.isArray(cached) && cached.length > 0) {
+    return cached as DashboardProject[];
+  }
+  const token = requireDashboardAuth();
+  const client = createDashboardClient(token);
+  const projects = await client.getProjects(false);
+  await cacheProjects(projects as unknown[]);
+  return projects;
+}
 
 const sprintCommand = new Command('sprint')
   .description('Sprint commands (api.studio.heizen.work)')
+  .argument('[index]', 'Sprint index from hz sprints (or use board/done subcommands)')
+  .action(async (indexStr) => {
+    if (!indexStr) return;
+    try {
+      const index = parseInt(indexStr, 10);
+      if (isNaN(index) || index < 1) return;
+      const ws = await getWorkspaceState();
+      if (!ws.linkedProjectId) {
+        console.error(chalk.red('No project linked. Run hz link <index> first.'));
+        process.exit(2);
+      }
+      const projects = await getProjectsCachedOrFetch();
+      const project = projects.find((p) => p.id === ws.linkedProjectId);
+      const sprints = project?.sprints ?? [];
+      const sprint = sprints[index - 1];
+      if (!sprint) {
+        console.error(chalk.red('Sprint not found. Run hz sprints first.'));
+        process.exit(2);
+      }
+      await setActiveSprint(sprint.id);
+      const token = requireDashboardAuth();
+      const client = createDashboardClient(token);
+      const { tasks, columns } = await client.getSprintBoard(sprint.id);
+      console.log(chalk.blue(`Sprint: ${sprint.name ?? sprint.id}\n`));
+      const displayTasks =
+        tasks.length > 0
+          ? tasks
+          : columns.map((c, i) => ({
+              id: c.id ?? String(i),
+              title: c.title,
+              stories: c.stories ?? [],
+            }));
+      if (displayTasks.length === 0) {
+        console.log(chalk.gray('No tasks in sprint board.'));
+        return;
+      }
+      displayTasks.forEach((t, i) => {
+        const stories = t.stories ?? [];
+        console.log(chalk.bold(`${i + 1}. ${t.title ?? 'Task'}`));
+        if (stories.length === 0) {
+          console.log(chalk.gray('  (empty)'));
+        } else {
+          stories.forEach((s: { id?: string; title?: string; status?: string }, j: number) => {
+            console.log(chalk.dim(`  ${j + 1}. ${(s.title ?? '').slice(0, 50)} [${s.status ?? '-'}]`));
+          });
+        }
+        console.log('');
+      });
+    } catch (err) {
+      console.error(chalk.red((err as Error).message));
+      process.exit(2);
+    }
+  })
   .addCommand(
     new Command('board')
       .description('Fetch sprint board')
