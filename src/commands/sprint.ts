@@ -36,7 +36,10 @@ const sprintCommand = new Command('sprint')
                 colWidths: [28, 35, 12, 10],
               });
               for (const s of stories) {
-                const story = typeof s === 'object' && s !== null ? s as { id?: string; title?: string; status?: string; storyNumber?: number } : {};
+                const story =
+                  typeof s === 'object' && s !== null
+                    ? (s as { id?: string; title?: string; status?: string; storyNumber?: number })
+                    : {};
                 table.push([
                   story.id ?? '-',
                   (story.title ?? '').slice(0, 33),
@@ -72,9 +75,7 @@ const sprintCommand = new Command('sprint')
               const { columns } = await client.getSprintBoard(opts.sprint);
               for (const col of columns) {
                 const stories = col.stories ?? col.tasks ?? [];
-                const found = stories.find(
-                  (s: { id?: string }) => (s as { id?: string }).id === storyId
-                );
+                const found = stories.find((s: { id?: string }) => (s as { id?: string }).id === storyId);
                 if (found) {
                   story = found as Parameters<typeof client.updateStory>[0];
                   break;

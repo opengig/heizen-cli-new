@@ -2,10 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import { createWorklogClient } from '../api/worklog.js';
-import {
-  requireWorklogAuth,
-  getWorklogUserIdFromCookie,
-} from '../config/index.js';
+import { requireWorklogAuth, getWorklogUserIdFromCookie } from '../config/index.js';
 
 function getDefaultDateRange(): { start: string; end: string } {
   const now = new Date();
@@ -109,33 +106,31 @@ const worklogCommand = new Command('worklog')
       })
   )
   .addCommand(
-    new Command('projects')
-      .description('List active projects from user.data')
-      .action(async () => {
-        try {
-          const cookie = requireWorklogAuth();
-          const client = createWorklogClient(cookie);
-          const { projects } = await client.getUserData();
+    new Command('projects').description('List active projects from user.data').action(async () => {
+      try {
+        const cookie = requireWorklogAuth();
+        const client = createWorklogClient(cookie);
+        const { projects } = await client.getUserData();
 
-          if (projects.length === 0) {
-            console.log(chalk.gray('No projects found.'));
-            return;
-          }
-
-          const table = new Table({
-            head: ['ID', 'Title'],
-            colWidths: [28, 40],
-          });
-
-          for (const p of projects) {
-            table.push([p.id, p.title ?? p.name ?? '-']);
-          }
-          console.log(table.toString());
-        } catch (err) {
-          console.error(chalk.red((err as Error).message));
-          process.exit(2);
+        if (projects.length === 0) {
+          console.log(chalk.gray('No projects found.'));
+          return;
         }
-      })
+
+        const table = new Table({
+          head: ['ID', 'Title'],
+          colWidths: [28, 40],
+        });
+
+        for (const p of projects) {
+          table.push([p.id, p.title ?? p.name ?? '-']);
+        }
+        console.log(table.toString());
+      } catch (err) {
+        console.error(chalk.red((err as Error).message));
+        process.exit(2);
+      }
+    })
   );
 
 export default worklogCommand;

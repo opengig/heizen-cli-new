@@ -24,10 +24,7 @@ program.configureHelp({
   styleSubcommandDescription: (str) => chalk.gray(str),
 });
 
-program
-  .name('hz')
-  .description('Manage worklogs, projects, and sprints from the terminal')
-  .version('1.0.0');
+program.name('hz').description('Manage worklogs, projects, and sprints from the terminal').version('1.0.0');
 
 const rootHelpBefore = [
   '',

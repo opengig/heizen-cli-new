@@ -85,10 +85,12 @@ export const SprintBoardColumnSchema = z.object({
 export const SprintBoardResponseSchema = z.union([
   z.object({
     columns: z.array(SprintBoardColumnSchema).optional(),
-    sprint: z.object({
-      id: z.string(),
-      name: z.string().optional(),
-    }).optional(),
+    sprint: z
+      .object({
+        id: z.string(),
+        name: z.string().optional(),
+      })
+      .optional(),
   }),
   z.array(SprintBoardColumnSchema),
 ]);

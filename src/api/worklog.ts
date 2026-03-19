@@ -26,9 +26,7 @@ export function createWorklogClient(cookie: string) {
       return res.data;
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
-        const msg = typeof err.response.data === 'string'
-          ? err.response.data
-          : JSON.stringify(err.response.data);
+        const msg = typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data);
         throw new Error(`Worklog API error ${err.response.status}: ${msg}`);
       }
       throw err;
@@ -36,11 +34,7 @@ export function createWorklogClient(cookie: string) {
   }
 
   return {
-    async getWorklogs(params: {
-      startDate: string;
-      endDate: string;
-      userId: string;
-    }): Promise<WorklogEntry[]> {
+    async getWorklogs(params: { startDate: string; endDate: string; userId: string }): Promise<WorklogEntry[]> {
       const formData = new FormData();
       formData.append('startDate', params.startDate);
       formData.append('endDate', params.endDate);
@@ -60,10 +54,8 @@ export function createWorklogClient(cookie: string) {
 
       const data = parsed.data;
       if (Array.isArray(data)) return data as WorklogEntry[];
-      if ('worklogs' in data && Array.isArray(data.worklogs))
-        return data.worklogs as WorklogEntry[];
-      if ('data' in data && Array.isArray(data.data))
-        return data.data as WorklogEntry[];
+      if ('worklogs' in data && Array.isArray(data.worklogs)) return data.worklogs as WorklogEntry[];
+      if ('data' in data && Array.isArray(data.data)) return data.data as WorklogEntry[];
       return [];
     },
 

@@ -27,9 +27,7 @@ export function createDashboardClient(token: string) {
       return res.data;
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
-        const msg = typeof err.response.data === 'string'
-          ? err.response.data
-          : JSON.stringify(err.response.data);
+        const msg = typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data);
         throw new Error(`Dashboard API error ${err.response.status}: ${msg}`);
       }
       throw err;

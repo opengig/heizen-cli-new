@@ -4,9 +4,14 @@
   "type": "module",
   "private": true,
   "devDependencies": {
+    "@eslint/js": "^9.15.0",
     "@types/bun": "latest",
     "@types/node": "^25.5.0",
-    "tsx": "^4.21.0"
+    "eslint": "^9.15.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.0",
+    "tsx": "^4.21.0",
+    "typescript-eslint": "^8.15.0"
   },
   "peerDependencies": {
     "typescript": "^5.9.3"
@@ -28,6 +33,11 @@
   "scripts": {
     "dev": "tsx src/bin/index.ts",
     "build": "tsc",
-    "start": "node dist/bin/index.js"
+    "type-check": "tsc --noEmit",
+    "start": "node dist/bin/index.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   }
 }

@@ -33,12 +33,7 @@ const projectsCommand = new Command('projects')
           });
 
           for (const p of projects) {
-            table.push([
-              p.id,
-              p.title ?? '-',
-              p.uniqueName ?? '-',
-              p.active !== undefined ? String(p.active) : '-',
-            ]);
+            table.push([p.id, p.title ?? '-', p.uniqueName ?? '-', p.active !== undefined ? String(p.active) : '-']);
           }
           console.log(table.toString());
         } catch (err) {
