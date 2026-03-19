@@ -1,12 +1,14 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from 'axios';
+import { z } from 'zod';
 import {
   GetWorklogsResponseSchema,
-  UserDataResponseSchema,
   AddWorklogRequestSchema,
+  WorklogProjectSchema,
   type AddWorklogRequest,
   type WorklogEntry,
   type WorklogProject,
 } from '../schemas/worklog.js';
+import { parseFlight } from '../utils/parseFlight.js';
 
 const BASE_URL = 'https://worklog.opengig.work';
 
@@ -89,29 +91,36 @@ export function createWorklogClient(cookie: string) {
     async getUserData(): Promise<{ projects: WorklogProject[] }> {
       const raw = await request<unknown>('/dashboard/user.data');
 
-      const parsed = UserDataResponseSchema.safeParse(raw);
-      if (!parsed.success) {
-        console.error('Schema validation failed:', parsed.error.format());
-        console.error('Raw response:', JSON.stringify(raw, null, 2));
-        throw new Error('Invalid user.data response format');
+      if (!Array.isArray(raw)) {
+        return { projects: [] };
       }
 
-      const data = parsed.data;
-      let projects: WorklogProject[] = [];
-
-      if (Array.isArray(data)) {
-        projects = data
-          .filter((item): item is Record<string, unknown> => typeof item === 'object' && item !== null)
-          .flatMap((item) => {
-            const p = (item as { projects?: WorklogProject[] }).projects;
-            return p ?? [];
-          });
-      } else if (typeof data === 'object' && data !== null) {
-        const obj = data as Record<string, unknown>;
-        projects = (obj.projects as WorklogProject[]) ?? (obj.user as { projects?: WorklogProject[] })?.projects ?? [];
+      let extractedProjects: unknown[] = [];
+      try {
+        const parsed = parseFlight<Record<string, unknown>>(raw);
+        const entry = parsed.find(
+          (item) =>
+            item &&
+            typeof item === 'object' &&
+            'data' in item &&
+            item.data &&
+            typeof item.data === 'object' &&
+            'projects' in item.data &&
+            Array.isArray((item.data as { projects: unknown[] }).projects)
+        );
+        if (entry && entry.data && typeof entry.data === 'object') {
+          extractedProjects = (entry.data as { projects: unknown[] }).projects;
+        }
+      } catch {
+        return { projects: [] };
       }
 
-      return { projects };
+      const validated = z.array(WorklogProjectSchema).safeParse(extractedProjects);
+      if (!validated.success) {
+        console.error('User data schema validation failed:', validated.error.format());
+        return { projects: [] };
+      }
+      return { projects: validated.data };
     },
 
     async addWorklog(req: AddWorklogRequest): Promise<unknown> {

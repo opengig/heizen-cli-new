@@ -28,24 +28,13 @@ export const GetWorklogsResponseSchema = z.union([
 ]);
 
 /** Project from user.data (worklog projects - different IDs from dashboard) */
-export const WorklogProjectSchema = z.object({
-  id: z.string(),
-  title: z.string().optional(),
-  name: z.string().optional(),
-});
-
-/** Response from GET /dashboard/user.data - may be array or object with projects */
-export const UserDataResponseSchema = z.union([
-  z.array(z.any()),
-  z.object({
-    projects: z.array(WorklogProjectSchema).optional(),
-    user: z
-      .object({
-        projects: z.array(WorklogProjectSchema).optional(),
-      })
-      .optional(),
-  }),
-]);
+export const WorklogProjectSchema = z
+  .object({
+    id: z.string(),
+    title: z.string().optional(),
+    name: z.string().optional(),
+  })
+  .passthrough();
 
 /** Request body for adding worklog (POST /dashboard/user.data?index) */
 export const AddWorklogRequestSchema = z.object({
@@ -61,5 +50,4 @@ export const AddWorklogRequestSchema = z.object({
 export type WorklogEntry = z.infer<typeof WorklogEntrySchema>;
 export type GetWorklogsResponse = z.infer<typeof GetWorklogsResponseSchema>;
 export type WorklogProject = z.infer<typeof WorklogProjectSchema>;
-export type UserDataResponse = z.infer<typeof UserDataResponseSchema>;
 export type AddWorklogRequest = z.infer<typeof AddWorklogRequestSchema>;
