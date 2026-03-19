@@ -46,6 +46,7 @@ const rootHelpAfter = [
   chalk.bold('  Examples:'),
   chalk.dim('    ') + chalk.cyan('hz work login') + chalk.dim('             Sign in to worklog'),
   chalk.dim('    ') + chalk.cyan('hz work') + chalk.dim('                 List worklogs for today'),
+  chalk.dim('    ') + chalk.cyan('hz work -5') + chalk.dim('               List worklogs for 5 days ago'),
   chalk.dim('    ') + chalk.cyan('hz work projects --all') + chalk.dim('  List worklog projects'),
   chalk.dim('    ') + chalk.cyan('hz work active "project"') + chalk.dim(' Set active project'),
   chalk.dim('    ') + chalk.cyan('hz projects list') + chalk.dim('         List Studio Heizen projects'),
@@ -87,10 +88,10 @@ if (args[0] === 'wa') {
 if (args[0] === 'wp') {
   process.argv = [process.argv[0], process.argv[1], 'work', 'projects', ...args.slice(1)];
 }
-// hz work -5 => hz work -n 5 (shorthand for N days ago)
+// hz work -5 => hz work 5 (N days ago as positional)
 if (args[0] === 'work' && args[1]?.match(/^-(\d+)$/)) {
   const n = args[1].slice(1);
-  process.argv = [process.argv[0], process.argv[1], 'work', '-n', n, ...args.slice(2)];
+  process.argv = [process.argv[0], process.argv[1], 'work', n, ...args.slice(2)];
 }
 
 try {

@@ -24,7 +24,7 @@ function formatHours(hours: number): string {
   return `${hours.toFixed(1)}h`;
 }
 
-function getDateRangeForDay(daysAgo: number): { start: string; end: string } {
+function getDateRangeForDay(daysAgo: number): { start: string; end: string; displayDate: string } {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
   d.setHours(0, 0, 0, 0);
@@ -32,7 +32,11 @@ function getDateRangeForDay(daysAgo: number): { start: string; end: string } {
   const end = new Date(d);
   end.setDate(end.getDate() + 1);
   end.setMilliseconds(-1);
-  return { start, end: end.toISOString() };
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  const displayDate = `${day}-${month}-${year}`;
+  return { start, end: end.toISOString(), displayDate };
 }
 
 function projectDisplayName(p: { id: string; name?: string; title?: string }): string {
@@ -57,9 +61,7 @@ async function requireWorklogAuth(): Promise<{ cookie: string; userId: string }>
 const workCommand = new Command('work')
   .description('Worklog commands (worklog.opengig.work)')
   .option('-p, --pending', 'List locally pending works')
-  .option('-1', 'List worklogs for yesterday')
-  .option('-n, --days <n>', 'List worklogs for n days ago', (v) => parseInt(v, 10))
-  .argument('[days]', 'Days ago (e.g. 1 for yesterday)', (v) => (v ? parseInt(v, 10) : undefined))
+  .argument('[days]', 'Days ago (e.g. -5 for 5 days ago, 0 for today)', (v) => (v ? parseInt(v, 10) : 0))
   .action(async (daysArg, opts) => {
     try {
       if (opts.pending) {
@@ -79,7 +81,7 @@ const workCommand = new Command('work')
         return;
       }
 
-      const daysAgo = opts['1'] ? 1 : (opts.days ?? daysArg ?? 0);
+      const daysAgo = daysArg ?? 0;
       const { cookie, userId } = await requireWorklogAuth();
       const onUnauthorized = async () => {
         await clearWorklogAuth();
@@ -87,7 +89,7 @@ const workCommand = new Command('work')
         process.exit(2);
       };
       const client = createWorklogClient(cookie, onUnauthorized);
-      const { start, end } = getDateRangeForDay(daysAgo);
+      const { start, end, displayDate } = getDateRangeForDay(daysAgo);
       const worklogs = await client.getWorklogs({ startDate: start, endDate: end, userId });
 
       if (worklogs.length === 0) {
@@ -95,20 +97,19 @@ const workCommand = new Command('work')
         return;
       }
 
+      console.log(chalk.bold(displayDate));
+      console.log('');
       const table = new Table({
-        head: ['Date', 'Project', 'Hours', 'Phase', 'Type', 'Notes'],
-        colWidths: [22, 24, 8, 12, 8, 30],
+        head: ['Project', 'Hours', 'Phase', 'Notes'],
+        colWidths: [20, 8, 14, 36],
       });
       for (const w of worklogs) {
         const proj = (w as { project?: { title?: string; name?: string } }).project;
-        const dateStr = (w as { date?: string; createdAt?: string }).date ?? (w as { date?: string; createdAt?: string }).createdAt;
         table.push([
-          dateStr?.slice(0, 19) ?? '-',
           proj?.title ?? proj?.name ?? w.projectId,
           w.hoursWorked,
           w.taskPhase,
-          w.workLogType,
-          (w.notes ?? '').slice(0, 28),
+          (w.notes ?? '').slice(0, 34),
         ]);
       }
       console.log(table.toString());
