@@ -18,9 +18,45 @@ export type Work = z.infer<typeof WorkSchema>;
 export const WorkspaceStateSchema = z.object({
   linkedProjectId: z.string().optional(),
   linkedWorklogProjectId: z.string().optional(),
+  linkedWorklogProject: z
+    .object({
+      id: z.string(),
+      name: z.string(),
+    })
+    .optional(),
   activeSprintId: z.string().optional(),
+  pendingWorks: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+        startTime: z.number(),
+        projectId: z.string(),
+        projectName: z.string(),
+      })
+    )
+    .optional(),
 });
 export type WorkspaceState = z.infer<typeof WorkspaceStateSchema>;
+
+export const PendingWorkSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  startTime: z.number(),
+  projectId: z.string(),
+  projectName: z.string(),
+});
+export type PendingWork = z.infer<typeof PendingWorkSchema>;
+
+export const WorklogAuthSchema = z.object({
+  cookie: z.string(),
+  userData: z.object({
+    userId: z.string(),
+    projects: z.array(z.any()),
+  }),
+  fetchedAt: z.number(),
+});
+export type WorklogAuth = z.infer<typeof WorklogAuthSchema>;
 
 export const DbSchema = z.object({
   version: z.number().default(1),
@@ -31,6 +67,15 @@ export const DbSchema = z.object({
       fetchedAt: z.number(),
       projects: z.array(z.any()),
     })
+    .optional(),
+  worklogAuth: WorklogAuthSchema.optional(),
+  recentWorklogProjects: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+      })
+    )
     .optional(),
 });
 export type Db = z.infer<typeof DbSchema>;

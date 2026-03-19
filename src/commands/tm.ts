@@ -21,7 +21,7 @@ async function getProjectsCachedOrFetch(): Promise<DashboardProject[]> {
 const linkCommand = new Command('link')
   .description('Link project to this repo')
   .argument('<index>', 'Project index from hz projects')
-  .option('-w, --worklog <index>', 'Link worklog project (from hz worklog projects)')
+  .option('-w, --worklog <index>', 'Link worklog project (from hz work projects --all)')
   .action(async (indexStr, opts) => {
     try {
       const index = parseInt(indexStr, 10);
@@ -41,15 +41,25 @@ const linkCommand = new Command('link')
         const worklogIdx = parseInt(opts.worklog, 10);
         if (!isNaN(worklogIdx) && worklogIdx >= 1) {
           const { createWorklogClient } = await import('../api/worklog.js');
-          const { requireWorklogAuth } = await import('../config/index.js');
-          const cookie = requireWorklogAuth();
-          const client = createWorklogClient(cookie);
+          const { getWorklogCookie, clearWorklogAuth } = await import('../db/index.js');
+          const cookie = await getWorklogCookie();
+          if (!cookie) {
+            console.error(chalk.red('Run hz work login to sign in first.'));
+            process.exit(2);
+          }
+          const onUnauthorized = async () => {
+            await clearWorklogAuth();
+            console.error(chalk.red('Session expired. Run hz work login to sign in again.'));
+            process.exit(2);
+          };
+          const client = createWorklogClient(cookie, onUnauthorized);
           const { projects: wlProjects } = await client.getUserData();
           const wlProj = wlProjects[worklogIdx - 1];
           if (wlProj) {
             const { setLinkedWorklogProject } = await import('../db/index.js');
-            await setLinkedWorklogProject(wlProj.id);
-            console.log(chalk.green(`Linked worklog: ${wlProj.title ?? wlProj.id}`));
+            const name = wlProj.name ?? wlProj.title ?? wlProj.id;
+            await setLinkedWorklogProject({ id: wlProj.id, name });
+            console.log(chalk.green(`Linked worklog: ${name}`));
           }
         }
       }
