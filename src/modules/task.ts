@@ -39,18 +39,18 @@ export const taskCommand = new Command('task')
         console.error(chalk.red('Task not found.'));
         process.exit(2);
       }
-      const stories = task.stories ?? [];
+      const stories = task.stories;
       if (stories.length === 0) {
-        console.log(chalk.gray(`Task ${taskIndex}: ${task.title ?? 'Task'} (empty)`));
+        console.log(chalk.gray(`Task ${taskIndex}: ${task.title} (empty)`));
         return;
       }
-      console.log(chalk.bold(`Task ${taskIndex}: ${task.title ?? 'Task'}\n`));
+      console.log(chalk.bold(`Task ${taskIndex}: ${task.title}\n`));
       const table = new Table({
         head: ['#', 'ID', 'Title', 'Status'],
         colWidths: [4, 28, 40, 12],
       });
       stories.forEach((s, i) => {
-        table.push([i + 1, s.id, (s.title ?? '').slice(0, 38), s.status ?? '-']);
+        table.push([i + 1, s.id, s.title.slice(0, 38), s.status]);
       });
       console.log(table.toString());
     } catch (err) {

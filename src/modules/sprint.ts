@@ -30,28 +30,20 @@ const sprintCommand = new Command('sprint')
       await setActiveSprint(sprint.id);
       const token = requireDashboardAuth();
       const client = createDashboardClient(token);
-      const { tasks, columns } = await client.getSprintBoard(sprint.id);
+      const { tasks } = await client.getSprintBoard(sprint.id);
       console.log(chalk.blue(`Sprint: ${sprint.name ?? sprint.id}\n`));
-      const displayTasks =
-        tasks.length > 0
-          ? tasks
-          : columns.map((c, i) => ({
-              id: c.id ?? String(i),
-              title: c.title,
-              stories: c.stories ?? [],
-            }));
-      if (displayTasks.length === 0) {
+      if (tasks.length === 0) {
         console.log(chalk.gray('No tasks in sprint board.'));
         return;
       }
-      displayTasks.forEach((t, i) => {
-        const stories = t.stories ?? [];
-        console.log(chalk.bold(`${i + 1}. ${t.title ?? 'Task'}`));
+      tasks.forEach((t, i) => {
+        const stories = t.stories;
+        console.log(chalk.bold(`${i + 1}. ${t.title}`));
         if (stories.length === 0) {
           console.log(chalk.gray('  (empty)'));
         } else {
-          stories.forEach((s: { id?: string; title?: string; status?: string }, j: number) => {
-            console.log(chalk.dim(`  ${j + 1}. ${(s.title ?? '').slice(0, 50)} [${s.status ?? '-'}]`));
+          stories.forEach((s, j) => {
+            console.log(chalk.dim(`  ${j + 1}. ${s.title.slice(0, 50)} [${s.status}]`));
           });
         }
         console.log('');
@@ -69,20 +61,16 @@ const sprintCommand = new Command('sprint')
         try {
           const token = requireDashboardAuth();
           const client = createDashboardClient(token);
-          const { columns, sprint } = await client.getSprintBoard(sprintId);
+          const { tasks } = await client.getSprintBoard(sprintId);
 
-          if (sprint) {
-            console.log(chalk.blue(`Sprint: ${sprint.name ?? sprintId}\n`));
-          }
-
-          if (columns.length === 0) {
-            console.log(chalk.gray('No columns/stories in sprint board.'));
+          if (tasks.length === 0) {
+            console.log(chalk.gray('No tasks in sprint board.'));
             return;
           }
 
-          for (const col of columns) {
-            console.log(chalk.bold(col.title ?? 'Column'));
-            const stories = col.stories ?? col.tasks ?? [];
+          for (const task of tasks) {
+            console.log(chalk.bold(task.title));
+            const stories = task.stories;
             if (stories.length === 0) {
               console.log(chalk.gray('  (empty)'));
             } else {
@@ -91,15 +79,11 @@ const sprintCommand = new Command('sprint')
                 colWidths: [28, 35, 12, 10],
               });
               for (const s of stories) {
-                const story =
-                  typeof s === 'object' && s !== null
-                    ? (s as { id?: string; title?: string; status?: string; storyNumber?: number })
-                    : {};
                 table.push([
-                  story.id ?? '-',
-                  (story.title ?? '').slice(0, 33),
-                  story.status ?? '-',
-                  story.storyNumber ?? '-',
+                  s.id,
+                  s.title.slice(0, 33),
+                  s.status,
+                  s.storyNumber,
                 ]);
               }
               console.log(table.toString());
@@ -127,12 +111,11 @@ const sprintCommand = new Command('sprint')
             story = await client.getStory(storyId);
           } catch {
             if (opts.sprint) {
-              const { columns } = await client.getSprintBoard(opts.sprint);
-              for (const col of columns) {
-                const stories = col.stories ?? col.tasks ?? [];
-                const found = stories.find((s: { id?: string }) => (s as { id?: string }).id === storyId);
+              const { tasks } = await client.getSprintBoard(opts.sprint);
+              for (const task of tasks) {
+                const found = task.stories.find((s) => s.id === storyId);
                 if (found) {
-                  story = found as Parameters<typeof client.updateStory>[0];
+                  story = found;
                   break;
                 }
               }

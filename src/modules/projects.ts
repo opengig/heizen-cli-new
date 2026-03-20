@@ -45,7 +45,7 @@ const projectsCommand = new Command('projects')
           }
 
           const table = new Table({
-            head: ['#', 'ID', 'Title', 'Unique Name', 'Active'],
+            head: ['#', 'ID', 'Title', 'Unique Name', 'Archived'],
             colWidths: [4, 28, 30, 20, 8],
           });
 
@@ -56,7 +56,7 @@ const projectsCommand = new Command('projects')
               p.id,
               p.title ?? '-',
               p.uniqueName ?? '-',
-              p.active !== undefined ? String(p.active) : '-',
+              String(p.isArchived),
             ]);
           }
           console.log(table.toString());

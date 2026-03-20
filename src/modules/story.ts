@@ -43,7 +43,7 @@ export const storyCommand = new Command('story')
         console.error(chalk.red('Task not found.'));
         process.exit(2);
       }
-      const stories = task.stories ?? [];
+      const stories = task.stories;
       if (stories.length === 0) {
         console.log(chalk.gray('No stories in this task.'));
         return;
@@ -77,12 +77,12 @@ export const storyCommand = new Command('story')
         const fullStory = await client.getStory(story.id).catch(() => story as UserStory);
         (fullStory as UserStory).status = 'Done';
         await client.updateStory(fullStory as UserStory);
-        console.log(chalk.green(`Marked story as Done: ${story.title ?? story.id}`));
+        console.log(chalk.green(`Marked story as Done: ${story.title}`));
       } else {
-        console.log(chalk.bold(`Story: ${story.title ?? story.id}\n`));
+        console.log(chalk.bold(`Story: ${story.title}\n`));
         console.log(chalk.dim(`ID: ${story.id}`));
-        console.log(chalk.dim(`Status: ${story.status ?? '-'}`));
-        console.log(chalk.dim(`Description: ${(story.description ?? '').slice(0, 200)}`));
+        console.log(chalk.dim(`Status: ${story.status}`));
+        console.log(chalk.dim(`Description: ${story.description.slice(0, 200)}`));
       }
     } catch (err) {
       console.error(chalk.red((err as Error).message));
