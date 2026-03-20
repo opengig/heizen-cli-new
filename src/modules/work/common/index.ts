@@ -29,10 +29,6 @@ export function getDateRangeForDay(daysAgo: number): {
   return { start, end: end.toISOString(), displayDate };
 }
 
-export function projectDisplayName(p: { id: string; name?: string; title?: string }): string {
-  return p.name ?? p.title ?? p.id;
-}
-
 export async function requireWorklogAuth(): Promise<{ cookie: string; userId: string }> {
   const cookie = await getWorklogCookie();
   if (!cookie) {

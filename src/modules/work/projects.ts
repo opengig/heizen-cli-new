@@ -1,9 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import Table from 'cli-table3';
 import { getRecentWorklogProjects } from '../../db/repositories/recent-worklog-projects.repository.js';
 import { createWorklogClient } from '../../api/index.js';
-import { requireWorklogAuth, projectDisplayName } from './common/index.js';
+import { requireWorklogAuth } from './common/index.js';
 import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export const projectsCommand = new Command('projects')
@@ -25,22 +24,13 @@ export const projectsCommand = new Command('projects')
         let list = projects;
         if (filter) {
           const q = filter.toLowerCase();
-          list = projects.filter(
-            (p: { name?: string; title?: string; id?: string }) =>
-              (p.name ?? '').toLowerCase().includes(q) ||
-              (p.title ?? '').toLowerCase().includes(q) ||
-              (p.id ?? '').toLowerCase().includes(q)
-          );
+          list = projects.filter((p: { name?: string }) => (p.name ?? '').toLowerCase().includes(q));
         }
         if (list.length === 0) {
           console.log(chalk.gray('No projects found.'));
           return;
         }
-        const table = new Table({ head: ['#', 'ID', 'Name'], colWidths: [4, 28, 40] });
-        list.forEach((p: { id: string; name?: string; title?: string }, i: number) =>
-          table.push([i + 1, p.id, projectDisplayName(p)])
-        );
-        console.log(table.toString());
+        list.forEach((p) => console.log(p.name));
         return;
       }
 
@@ -50,22 +40,14 @@ export const projectsCommand = new Command('projects')
           console.log(chalk.gray('No projects found.'));
           return;
         }
-        const table = new Table({ head: ['#', 'ID', 'Name'], colWidths: [4, 28, 40] });
-        projects
-          .slice(0, 10)
-          .forEach((p: { id: string; name?: string; title?: string }, i: number) =>
-            table.push([i + 1, p.id, projectDisplayName(p)])
-          );
-        console.log(table.toString());
+        projects.slice(0, 10).forEach((p) => console.log(p.name));
         if (projects.length >= 10) {
           console.log(chalk.dim('Use hz work projects --all to see all projects.'));
         }
         return;
       }
 
-      const table = new Table({ head: ['#', 'ID', 'Name'], colWidths: [4, 28, 40] });
-      recent.forEach((p, i) => table.push([i + 1, p.id, p.name]));
-      console.log(table.toString());
+      recent.forEach((p) => console.log(p.name));
       if (recent.length >= 10) {
         console.log(chalk.dim('Use hz work projects --all to see all projects.'));
       }

@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getLinkedWorklogProject, setLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
 import { createWorklogClient } from '../../api/index.js';
-import { requireWorklogAuth, projectDisplayName } from './common/index.js';
+import { requireWorklogAuth } from './common/index.js';
 import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export const activeCommand = new Command('active')
@@ -31,31 +31,26 @@ export const activeCommand = new Command('active')
       }
 
       const q = name.trim();
-      const exact = projects.find((p) => projectDisplayName(p).toLowerCase() === q.toLowerCase());
+      const exact = projects.find((p) => p.name?.toLowerCase() === q.toLowerCase());
       if (exact) {
+        const { id, name = '' } = exact;
         const linked = await getLinkedWorklogProject();
-        if (linked?.id === exact.id) {
+        if (linked?.id === id) {
           console.log(chalk.green('Active project already set.'));
           return;
         }
         const prevName = linked?.name;
-        await setLinkedWorklogProject({ id: exact.id, name: projectDisplayName(exact) });
+        await setLinkedWorklogProject({ id, name });
         if (prevName) {
-          console.log(
-            chalk.green(
-              `Active project changed from '${prevName}' to '${projectDisplayName(exact)}' for this directory.`
-            )
-          );
+          console.log(chalk.green(`Active project changed from '${prevName}' to '${name}' for this directory.`));
         } else {
-          console.log(chalk.green(`${projectDisplayName(exact)} project set as active for this directory.`));
+          console.log(chalk.green(`${name} project set as active for this directory.`));
         }
         return;
       }
 
-      const filtered = projects.filter(
-        (p: { name?: string; title?: string; id?: string }) =>
-          (p.name ?? '').toLowerCase().includes(q.toLowerCase()) ||
-          (p.title ?? '').toLowerCase().includes(q.toLowerCase())
+      const filtered = projects.filter((p: { name?: string }) =>
+        (p.name ?? '').toLowerCase().includes(q.toLowerCase())
       );
 
       if (filtered.length === 0) {
@@ -63,20 +58,18 @@ export const activeCommand = new Command('active')
         process.exit(2);
       }
       if (filtered.length === 1) {
-        const p = filtered[0];
+        const { id, name = '' } = filtered[0];
         const linked = await getLinkedWorklogProject();
-        if (linked?.id === p.id) {
+        if (linked?.id === id) {
           console.log(chalk.green('Active project already set.'));
           return;
         }
         const prevName = linked?.name;
-        await setLinkedWorklogProject({ id: p.id, name: projectDisplayName(p) });
+        await setLinkedWorklogProject({ id, name });
         if (prevName) {
-          console.log(
-            chalk.green(`Active project changed from '${prevName}' to '${projectDisplayName(p)}' for this directory.`)
-          );
+          console.log(chalk.green(`Active project changed from '${prevName}' to '${name}' for this directory.`));
         } else {
-          console.log(chalk.green(`${projectDisplayName(p)} project set as active for this directory.`));
+          console.log(chalk.green(`${name} project set as active for this directory.`));
         }
         return;
       }
@@ -85,11 +78,7 @@ export const activeCommand = new Command('active')
         process.exit(2);
       }
       const table = new Table({ head: ['#', 'Name'], colWidths: [4, 40] });
-      filtered
-        .slice(0, 5)
-        .forEach((p: { id: string; name?: string; title?: string }, i: number) =>
-          table.push([i + 1, projectDisplayName(p)])
-        );
+      filtered.slice(0, 5).forEach((p: { id: string; name?: string }, i: number) => table.push([i + 1, p.name ?? '']));
       console.log(table.toString());
       console.error(chalk.red(`+${filtered.length - 5} more projects found.`));
       process.exit(2);

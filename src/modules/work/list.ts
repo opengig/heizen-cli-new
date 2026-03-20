@@ -46,20 +46,19 @@ export function createListCommand() {
           return;
         }
 
-        console.log(chalk.bold(displayDate));
-        console.log('');
+        console.log('\nWorklogs for date: ' + chalk.bold(displayDate));
         const table = new Table({
-          head: ['Project', 'Hours', 'Phase', 'Notes'],
+          head: [
+            chalk.bold.blue('Project'),
+            chalk.bold.blue('Hours'),
+            chalk.bold.blue('Phase'),
+            chalk.bold.blue('Notes'),
+          ],
           colWidths: [20, 8, 14, 36],
         });
         for (const w of worklogs) {
-          const proj = (w as { project?: { title?: string; name?: string } }).project;
-          table.push([
-            proj?.title ?? proj?.name ?? w.projectId,
-            w.hoursWorked,
-            w.taskPhase,
-            (w.notes ?? '').slice(0, 34),
-          ]);
+          const proj = (w as { project?: { name?: string } }).project;
+          table.push([proj?.name ?? '', w.hoursWorked, w.taskPhase, (w.notes ?? '').slice(0, 34)]);
         }
         console.log(table.toString());
       } catch (err) {
