@@ -1,8 +1,8 @@
-import { createListCommand } from './list/command.js';
-import { loginCommand, refreshCommand } from './auth/command.js';
-import { activeCommand } from './active/command.js';
-import { projectsCommand } from './projects/command.js';
-import { startCommand, doneCommand } from './timer/command.js';
+import { createListCommand } from './list.js';
+import { loginCommand, refreshCommand } from './auth.js';
+import { activeCommand } from './active.js';
+import { projectsCommand } from './projects.js';
+import { startCommand, doneCommand } from './timer.js';
 
 const workCommand = createListCommand()
   .addCommand(loginCommand)

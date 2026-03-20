@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
-import { createDashboardClient } from '../../api/index.js';
-import { requireDashboardAuth } from '../../config/index.js';
-import type { UserStory } from '../../schemas/dashboard.js';
-import { getSprintBoardTasks } from '../common/index.js';
+import { createDashboardClient } from '../api/index.js';
+import { requireDashboardAuth } from '../config/index.js';
+import type { UserStory } from '../schemas/dashboard.js';
+import { getSprintBoardTasks } from './common/index.js';
 
 export const storyCommand = new Command('story')
   .description('Story details or mark done')

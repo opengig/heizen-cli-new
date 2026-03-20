@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getRecentWorklogProjects } from '../../../db/repositories/recent-worklog-projects.repository.js';
-import { createWorklogClient } from '../../../api/index.js';
-import { requireWorklogAuth, projectDisplayName } from '../common/index.js';
-import { clearWorklogAuth } from '../../../db/repositories/worklog-auth.repository.js';
+import { getRecentWorklogProjects } from '../../db/repositories/recent-worklog-projects.repository.js';
+import { createWorklogClient } from '../../api/index.js';
+import { requireWorklogAuth, projectDisplayName } from './common/index.js';
+import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export const projectsCommand = new Command('projects')
   .description('List worklog projects')

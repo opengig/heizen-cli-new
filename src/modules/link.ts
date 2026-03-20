@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import { setLinkedProject } from '../../db/repositories/workspace.repository.js';
-import { getProjectsCachedOrFetch } from '../common/index.js';
+import { setLinkedProject } from '../db/repositories/workspace.repository.js';
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 export const linkCommand = new Command('link')
   .description('Link project to this repo')

@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { createDashboardClient } from '../../api/index.js';
-import { requireDashboardAuth } from '../../config/index.js';
-import { getWorkspaceState, setActiveSprint } from '../../db/repositories/workspace.repository.js';
-import { getProjectsCachedOrFetch } from '../common/index.js';
+import { createDashboardClient } from '../api/index.js';
+import { requireDashboardAuth } from '../config/index.js';
+import { getWorkspaceState, setActiveSprint } from '../db/repositories/workspace.repository.js';
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 const sprintCommand = new Command('sprint')
   .description('Sprint commands (api.studio.heizen.work)')

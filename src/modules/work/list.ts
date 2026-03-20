@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getPendingWorks } from '../../../db/repositories/pending-works.repository.js';
-import { createWorklogClient } from '../../../api/index.js';
-import { requireWorklogAuth, getDateRangeForDay } from '../common/index.js';
-import { clearWorklogAuth } from '../../../db/repositories/worklog-auth.repository.js';
+import { getPendingWorks } from '../../db/repositories/pending-works.repository.js';
+import { createWorklogClient } from '../../api/index.js';
+import { requireWorklogAuth, getDateRangeForDay } from './common/index.js';
+import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export function createListCommand() {
   return new Command('work')

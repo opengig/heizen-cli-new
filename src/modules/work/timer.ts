@@ -1,16 +1,16 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import crypto from 'node:crypto';
-import { getLinkedWorklogProject } from '../../../db/repositories/workspace.repository.js';
+import { getLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
 import {
   addPendingWork,
   removePendingWork,
   findPendingWorkByHashPrefix,
-} from '../../../db/repositories/pending-works.repository.js';
-import { addToRecentWorklogProjects } from '../../../db/repositories/recent-worklog-projects.repository.js';
-import { createWorklogClient } from '../../../api/index.js';
-import { requireWorklogAuth, formatHours } from '../common/index.js';
-import { clearWorklogAuth } from '../../../db/repositories/worklog-auth.repository.js';
+} from '../../db/repositories/pending-works.repository.js';
+import { addToRecentWorklogProjects } from '../../db/repositories/recent-worklog-projects.repository.js';
+import { createWorklogClient } from '../../api/index.js';
+import { requireWorklogAuth, formatHours } from './common/index.js';
+import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export const startCommand = new Command('start')
   .description('Start work (active project required)')

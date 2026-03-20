@@ -1,10 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getLinkedWorklogProject, setLinkedWorklogProject } from '../../../db/repositories/workspace.repository.js';
-import { createWorklogClient } from '../../../api/index.js';
-import { requireWorklogAuth, projectDisplayName } from '../common/index.js';
-import { clearWorklogAuth } from '../../../db/repositories/worklog-auth.repository.js';
+import { getLinkedWorklogProject, setLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
+import { createWorklogClient } from '../../api/index.js';
+import { requireWorklogAuth, projectDisplayName } from './common/index.js';
+import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
 export const activeCommand = new Command('active')
   .description('Show or set active project')

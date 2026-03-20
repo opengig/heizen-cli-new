@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getProjectsCachedOrFetch } from '../common/index.js';
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 const projectsCommand = new Command('projects')
   .description('Dashboard project commands (api.studio.heizen.work)')

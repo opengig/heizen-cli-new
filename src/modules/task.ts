@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
 import Table from 'cli-table3';
-import { getSprintBoardTasks } from '../common/index.js';
+import { getSprintBoardTasks } from './common/index.js';
 
 export const taskCommand = new Command('task')
   .description('List stories in task (by index from hz sprint)')

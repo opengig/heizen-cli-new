@@ -1,8 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getWorkspaceState } from '../../db/repositories/workspace.repository.js';
-import { getProjectsCachedOrFetch } from '../common/index.js';
+import { getWorkspaceState } from '../db/repositories/workspace.repository.js';
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 export const sprintsCommand = new Command('sprints').description('List sprints of linked project').action(async () => {
   try {

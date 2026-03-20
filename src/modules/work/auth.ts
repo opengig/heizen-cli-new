@@ -1,9 +1,9 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import prompts from 'prompts';
-import { setWorklogAuth, clearWorklogAuth } from '../../../db/repositories/worklog-auth.repository.js';
-import { worklogLogin, createWorklogClient } from '../../../api/index.js';
-import { requireWorklogAuth } from '../common/index.js';
+import { setWorklogAuth, clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
+import { worklogLogin, createWorklogClient } from '../../api/index.js';
+import { requireWorklogAuth } from './common/index.js';
 
 export const loginCommand = new Command('login').description('Interactive login').action(async () => {
   try {
