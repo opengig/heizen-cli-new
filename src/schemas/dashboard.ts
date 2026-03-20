@@ -2,13 +2,7 @@ import { z } from 'zod';
 
 // ─── Projects endpoint (GET /projects?active=false) ─────────────────────────
 
-export const ProjectRoleSchema = z.enum([
-  'Admin',
-  'Developer',
-  'Manager',
-  'Client',
-  'Designer',
-]);
+export const ProjectRoleSchema = z.enum(['Admin', 'Developer', 'Manager', 'Client', 'Designer']);
 export type ProjectRole = z.infer<typeof ProjectRoleSchema>;
 
 export const SprintStatusSchema = z.enum(['Completed', 'Active', 'Paused', 'Not Started']);
@@ -100,13 +94,7 @@ const TaskRefSchema = z.object({
   type: z.string(),
 });
 
-const StoryStatusSchema = z.enum([
-  'Done',
-  'InReview',
-  'Todo',
-  'InProgress',
-  'In Progress',
-]);
+const StoryStatusSchema = z.enum(['Done', 'InReview', 'Todo', 'InProgress', 'In Progress']);
 
 /** User story - full object for GET /tasks/user-stories/story/{id} and sprint board */
 export const UserStorySchema = z.object({
