@@ -1,5 +1,6 @@
 import { Command } from 'commander';
-import chalk from 'chalk';
+import chalk, { ChalkInstance } from 'chalk';
+import Table from 'cli-table3';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
@@ -21,12 +22,24 @@ function parseStatus(shorthand: string): StoryStatus | null {
   return STATUS_MAP[key] ?? null;
 }
 
+function statusColor(status: string): ChalkInstance {
+  const s = status.toLowerCase();
+  if (s === 'done') return chalk.green;
+  if (s === 'inreview') return chalk.yellow;
+  if (s === 'inprogress' || s === 'in progress') return chalk.cyan;
+  if (s === 'todo') return chalk.gray;
+  return chalk.reset;
+}
+
+function formatStoryLine(i: number, s: UserStory): string {
+  const color = statusColor(s.status);
+  return color(`${i + 1}. ${s.title} [${s.estimation} hrs]`);
+}
+
 function printStoryDetails(story: UserStory) {
   console.log(chalk.bold(`Story: ${story.title}\n`));
-  console.log(chalk.dim(`ID: ${story.id}`));
   console.log(chalk.dim(`Status: ${story.status}`));
   console.log(chalk.dim(`Priority: ${story.priority}`));
-  console.log(chalk.dim(`Assigned to: ${story.assignedTo}`));
   if (story.assignee) {
     const name = [story.assignee.firstName, story.assignee.lastName].filter(Boolean).join(' ');
     if (name) console.log(chalk.dim(`Assignee: ${name} (${story.assignee.email})`));
@@ -86,7 +99,7 @@ export const taskCommand = new Command('tasks')
           return;
         }
         stories.forEach((s, i) => {
-          console.log(chalk.dim(`  ${i + 1}. ${s.title} | est:${s.estimation} | ${s.status}`));
+          console.log(formatStoryLine(i, s));
         });
         const { storyNum } = await prompts({
           type: 'number',
@@ -113,9 +126,14 @@ export const taskCommand = new Command('tasks')
           if (t.stories.length === 0) {
             console.log(chalk.gray('  (empty)'));
           } else {
-            t.stories.forEach((s, j) => {
-              console.log(chalk.dim(`  ${j + 1}. ${s.title} | est:${s.estimation} | ${s.status}`));
+            const table = new Table({
+              head: ['#', 'Name', 'Estimate', 'Status'],
+              colWidths: [4, 40, 10, 12],
             });
+            t.stories.forEach((s, j) => {
+              table.push([j + 1, s.title, s.estimation, s.status]);
+            });
+            console.log(table.toString());
           }
           console.log('');
         });
