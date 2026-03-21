@@ -12,8 +12,5 @@ export async function getProjects(client: DashboardServiceClient, active?: boole
     throw new Error('Invalid projects response format');
   }
 
-  const data = parsed.data;
-  if (Array.isArray(data)) return data as DashboardProject[];
-  const obj = data as Record<string, unknown>;
-  return (obj.projects ?? obj.data ?? []) as DashboardProject[];
+  return parsed.data;
 }

@@ -16,7 +16,8 @@ export const WorkSchema = z.object({
 export type Work = z.infer<typeof WorkSchema>;
 
 export const WorkspaceStateSchema = z.object({
-  linkedProjectId: z.string().optional(),
+  linkedDashboardProjectId: z.string().optional(),
+  linkedProjectId: z.string().optional(), // deprecated alias, use linkedDashboardProjectId
   linkedWorklogProjectId: z.string().optional(),
   linkedWorklogProject: z
     .object({

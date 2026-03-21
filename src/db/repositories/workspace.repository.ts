@@ -7,11 +7,16 @@ export async function getWorkspaceState(): Promise<WorkspaceState> {
   return db.data.workspaces[key] ?? {};
 }
 
-export async function setLinkedProject(projectId: string): Promise<void> {
+/** Linked dashboard project ID (separate from worklog). Use this for dashboard commands. */
+export function getLinkedDashboardProjectId(ws: WorkspaceState): string | undefined {
+  return ws.linkedDashboardProjectId ?? ws.linkedProjectId;
+}
+
+export async function setLinkedDashboardProject(projectId: string): Promise<void> {
   const db = await getDb();
   const key = getWorkspaceKey();
   if (!db.data.workspaces[key]) db.data.workspaces[key] = {};
-  db.data.workspaces[key].linkedProjectId = projectId;
+  db.data.workspaces[key].linkedDashboardProjectId = projectId;
   await db.write();
 }
 
