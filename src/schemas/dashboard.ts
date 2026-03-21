@@ -70,7 +70,7 @@ const UserRefSchema = z.object({
   id: z.string(),
   firstName: z.string(),
   lastName: z.string(),
-  avatarUrl: z.string(),
+  avatarUrl: z.string().nullable(),
   email: z.string(),
 });
 
@@ -107,12 +107,12 @@ export const UserStorySchema = z.object({
   order: z.number().nullable(),
   storyNumber: z.number(),
   figmaImages: z.array(z.any()),
-  acceptanceCriteria: z.array(z.string()),
+  acceptanceCriteria: z.array(z.union([z.string(), z.object({ criteria: z.string(), isCompleted: z.boolean() })])),
   status: StoryStatusSchema,
   assignedTo: z.string(),
   priority: z.number(),
   assignee: UserRefSchema,
-  creator: UserRefSchema,
+  creator: UserRefSchema.nullable(),
   testCases: z.array(z.any()),
   storyGithubPRs: z.array(z.any()),
   project: ProjectRefSchema,

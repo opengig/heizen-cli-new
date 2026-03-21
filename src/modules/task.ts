@@ -50,7 +50,10 @@ function printStoryDetails(story: UserStory) {
   }
   if (story.acceptanceCriteria?.length) {
     console.log(chalk.dim('Acceptance criteria:'));
-    story.acceptanceCriteria.forEach((c) => console.log(chalk.dim(`  - ${c}`)));
+    story.acceptanceCriteria.forEach((c) => {
+      const text = typeof c === 'string' ? c : (c as { criteria: string }).criteria;
+      console.log(chalk.dim(`  - ${text}`));
+    });
   }
 }
 
