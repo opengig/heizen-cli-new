@@ -16,7 +16,6 @@ export const WorklogEntrySchema = z
     project: z
       .object({
         id: z.string(),
-        title: z.string().optional(),
         name: z.string().optional(),
       })
       .passthrough()
@@ -37,7 +36,6 @@ export const GetWorklogsResponseSchema = z.union([
 export const WorklogProjectSchema = z
   .object({
     id: z.string(),
-    title: z.string().optional(),
     name: z.string().optional(),
   })
   .passthrough();

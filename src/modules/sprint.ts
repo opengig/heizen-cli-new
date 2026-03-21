@@ -1,22 +1,10 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { createDashboardClient } from '../api/dashboard.js';
+import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getWorkspaceState, setActiveSprint, getCachedProjects, cacheProjects } from '../db/index.js';
-import type { DashboardProject } from '../schemas/dashboard.js';
-
-async function getProjectsCachedOrFetch(): Promise<DashboardProject[]> {
-  const cached = await getCachedProjects();
-  if (cached && Array.isArray(cached) && cached.length > 0) {
-    return cached as DashboardProject[];
-  }
-  const token = requireDashboardAuth();
-  const client = createDashboardClient(token);
-  const projects = await client.getProjects(false);
-  await cacheProjects(projects as unknown[]);
-  return projects;
-}
+import { getWorkspaceState, setActiveSprint } from '../db/repositories/workspace.repository.js';
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 const sprintCommand = new Command('sprint')
   .description('Sprint commands (api.studio.heizen.work)')
@@ -170,4 +158,4 @@ const sprintCommand = new Command('sprint')
       })
   );
 
-export default sprintCommand;
+export { sprintCommand };

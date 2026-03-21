@@ -1,0 +1,32 @@
+import { createDashboardClient } from '../../api/index.js';
+import { requireDashboardAuth } from '../../config/index.js';
+import { getCachedProjects, cacheProjects } from '../../db/index.js';
+import { getWorkspaceState } from '../../db/repositories/workspace.repository.js';
+import type { DashboardProject, FeatureTask } from '../../schemas/dashboard.js';
+
+export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
+  if (active === undefined) {
+    const cached = await getCachedProjects();
+    if (cached && Array.isArray(cached) && cached.length > 0) {
+      return cached as DashboardProject[];
+    }
+  }
+  const token = requireDashboardAuth();
+  const client = createDashboardClient(token);
+  const projects = await client.getProjects(active);
+  if (active === undefined) {
+    await cacheProjects(projects as unknown[]);
+  }
+  return projects;
+}
+
+export async function getSprintBoardTasks(): Promise<FeatureTask[]> {
+  const ws = await getWorkspaceState();
+  if (!ws.activeSprintId) {
+    throw new Error('No active sprint. Run hz sprint <index> first.');
+  }
+  const token = requireDashboardAuth();
+  const client = createDashboardClient(token);
+  const { tasks } = await client.getSprintBoard(ws.activeSprintId);
+  return tasks;
+}

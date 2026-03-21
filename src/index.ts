@@ -1,10 +1,12 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
-import projectsCommand from './commands/projects.js';
-import sprintCommand from './commands/sprint.js';
-import { workCommand } from './commands/work.js';
-import { linkCommand, sprintsCommand } from './commands/tm.js';
-import { taskCommand, storyCommand } from './commands/story.js';
+import { projectsCommand } from './modules/projects.js';
+import { sprintCommand } from './modules/sprint.js';
+import { workCommand } from './modules/work/index.js';
+import { linkCommand } from './modules/link.js';
+import { sprintsCommand } from './modules/sprints.js';
+import { taskCommand } from './modules/task.js';
+import { storyCommand } from './modules/story.js';
 
 process.exitCode = 0;
 

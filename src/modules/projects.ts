@@ -1,26 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { createDashboardClient } from '../api/dashboard.js';
-import { requireDashboardAuth } from '../config/index.js';
-import { cacheProjects, getCachedProjects } from '../db/index.js';
-import type { DashboardProject } from '../schemas/dashboard.js';
-
-async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
-  if (active === undefined) {
-    const cached = await getCachedProjects();
-    if (cached && Array.isArray(cached) && cached.length > 0) {
-      return cached as DashboardProject[];
-    }
-  }
-  const token = requireDashboardAuth();
-  const client = createDashboardClient(token);
-  const projects = await client.getProjects(active);
-  if (active === undefined) {
-    await cacheProjects(projects as unknown[]);
-  }
-  return projects;
-}
+import { getProjectsCachedOrFetch } from './common/index.js';
 
 const projectsCommand = new Command('projects')
   .description('Dashboard project commands (api.studio.heizen.work)')
@@ -86,4 +67,4 @@ const projectsCommand = new Command('projects')
       })
   );
 
-export default projectsCommand;
+export { projectsCommand };
