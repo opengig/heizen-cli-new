@@ -1,4 +1,4 @@
-import { Command } from 'commander';
+import { Command, Help } from 'commander';
 import chalk from 'chalk';
 import { projectsCommand } from './modules/projects.js';
 import { workCommand } from './modules/work/index.js';
@@ -23,6 +23,12 @@ program.configureHelp({
   styleOptionDescription: (str) => chalk.gray(str),
   styleSubcommandTerm: (str) => chalk.green(str),
   styleSubcommandDescription: (str) => chalk.gray(str),
+  formatHelp: (cmd, helper) => {
+    if (!cmd.parent) {
+      return rootHelpBefore + '\n' + rootHelpAfter;
+    }
+    return Help.prototype.formatHelp.call(helper, cmd, helper);
+  },
 });
 
 program.name('hz').description('Manage worklogs, projects, and sprints from the terminal').version('1.0.0');
@@ -32,31 +38,87 @@ const rootHelpBefore = [
   chalk.bold.cyan('  Heizen CLI'),
   chalk.dim('  Manage worklogs and sprint tasks from the terminal.'),
   '',
-  chalk.dim('  Two separate systems (different project IDs):'),
-  chalk.dim('  • ') + chalk.cyan('Worklog') + chalk.dim(' — time tracking (worklog.opengig.work)'),
-  chalk.dim('  • ') + chalk.cyan('Dashboard') + chalk.dim(' — projects & sprints (api.studio.heizen.work)'),
+  chalk.bold.green('  WORKLOG ') + chalk.gray('(worklog.opengig.work — time tracking)'),
+  chalk.dim('  ' + '─'.repeat(52)),
+  chalk.dim('  ') + chalk.green('hz work [days]') + chalk.dim('                    List worklogs (0=today, -5=5 days ago)'),
+  chalk.dim('        ') + chalk.yellow('-p, --pending') + chalk.dim('               List locally pending works only'),
   '',
-  chalk.dim('  Run hz work login to sign in to worklog. Set HEIZEN_DASHBOARD_TOKEN for dashboard.'),
+  chalk.dim('  ') + chalk.green('hz work login') + chalk.dim('                     Interactive login (email/password)'),
+  '',
+  chalk.dim('  ') + chalk.green('hz work refresh') + chalk.dim('                   Refetch user data from API'),
+  '',
+  chalk.dim('  ') + chalk.green('hz work projects [filter]') + chalk.dim('         List worklog projects'),
+  chalk.dim('        ') + chalk.yellow('-a, --all') + chalk.dim('                   Show all projects (not just recent)'),
+  chalk.dim('        ') + chalk.gray('[filter]') + chalk.dim('                    Case-insensitive filter'),
+  '',
+  chalk.dim('  ') + chalk.green('hz work active [name]') + chalk.dim('             Show or set active project for this directory'),
+  chalk.dim('        ') + chalk.gray('[name]') + chalk.dim('                      Project name (exact or partial match)'),
+  chalk.dim('        ') + chalk.dim('(no arg)') + chalk.dim('                    Show linked project'),
+  '',
+  chalk.dim('  ') + chalk.green('hz work start <name>') + chalk.dim('              Start work (requires active project)'),
+  chalk.dim('        ') + chalk.gray('<name>') + chalk.dim('                      Work name'),
+  '',
+  chalk.dim('  ') + chalk.green('hz work done <hash>') + chalk.dim('               Mark work done by hash prefix, sync to API'),
+  chalk.dim('        ') + chalk.gray('<hash>') + chalk.dim('                      Hash prefix (e.g. abc)'),
+  '',
+  chalk.dim('  Aliases: ') + chalk.magenta('hz wa') + chalk.dim(' => hz work active, ') + chalk.magenta('hz wp') + chalk.dim(' => hz work projects'),
+  '',
+  chalk.bold.blue('  DASHBOARD ') + chalk.gray('(api.studio.heizen.work — projects & sprints)'),
+  chalk.dim('  ' + '─'.repeat(52)),
+  chalk.dim('  ') + chalk.cyan('hz projects') + chalk.dim('                       List dashboard projects (table)'),
+  chalk.dim('        ') + chalk.yellow('-v, --verbose') + chalk.dim('               Para-wise output with sprint counts'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz projects open [name]') + chalk.dim('           Link project to this directory'),
+  chalk.dim('        ') + chalk.gray('[name]') + chalk.dim('                      Project name (resolve by title/uniqueName)'),
+  chalk.dim('        ') + chalk.dim('(no arg)') + chalk.dim('                    Show linked project and working sprint'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz sprints') + chalk.dim('                        List sprints of linked project (name, status, dates)'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz sprints set') + chalk.dim('                    Set working sprint (interactive prompt)'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz tasks [taskIndex] [storyIndex] [status]'),
+  chalk.dim('                                    List tasks, view stories, or update story status'),
+  chalk.dim('        ') + chalk.yellow('-d, --details') + chalk.dim('               Show all tasks with all stories (table)'),
+  chalk.dim('        ') + chalk.yellow('-v, --view') + chalk.dim('                  Interactive mode (prompt for task/story)'),
+  chalk.dim('        ') + chalk.gray('[taskIndex]') + chalk.dim('                 1-based task index'),
+  chalk.dim('        ') + chalk.gray('[storyIndex]') + chalk.dim('                1-based story index'),
+  chalk.dim('        ') + chalk.gray('[status]') + chalk.dim('                    done | review | todo | inprogress'),
+  '',
+  chalk.dim('  Auth: hz work login for worklog. Set HEIZEN_DASHBOARD_TOKEN for dashboard.'),
   '',
 ].join('\n');
 
 const rootHelpAfter = [
   '',
-  chalk.bold('  Examples:'),
-  chalk.dim('    ') + chalk.cyan('hz work login') + chalk.dim('             Sign in to worklog'),
-  chalk.dim('    ') + chalk.cyan('hz work') + chalk.dim('                 List worklogs for today'),
-  chalk.dim('    ') + chalk.cyan('hz work -5') + chalk.dim('               List worklogs for 5 days ago'),
-  chalk.dim('    ') + chalk.cyan('hz work projects --all') + chalk.dim('  List worklog projects'),
-  chalk.dim('    ') + chalk.cyan('hz work active "project"') + chalk.dim(' Set active project'),
-  chalk.dim('    ') + chalk.cyan('hz projects') + chalk.dim('                 List dashboard projects'),
-  chalk.dim('    ') + chalk.cyan('hz projects open "name"') + chalk.dim('  Link project to this directory'),
-  chalk.dim('    ') + chalk.cyan('hz sprints set') + chalk.dim('             Set working sprint'),
-  chalk.dim('    ') + chalk.cyan('hz tasks') + chalk.dim('                  List tasks in sprint'),
+  chalk.bold.yellow('  EXAMPLES'),
+  '',
+  chalk.green('  Worklog:'),
+  chalk.dim('    ') + chalk.green('hz work login') + chalk.dim('                   Sign in'),
+  chalk.dim('    ') + chalk.green('hz work') + chalk.dim('                         List today\'s worklogs'),
+  chalk.dim('    ') + chalk.green('hz work 5') + chalk.dim('                       List worklogs from 5 days ago'),
+  chalk.dim('    ') + chalk.green('hz work -p') + chalk.dim('                      List pending (not yet synced) works'),
+  chalk.dim('    ') + chalk.green('hz work projects --all') + chalk.dim('          List all worklog projects'),
+  chalk.dim('    ') + chalk.green('hz work active "My Project"') + chalk.dim('     Set active project'),
+  chalk.dim('    ') + chalk.magenta('hz wa "My Project"') + chalk.dim('              Same (alias)'),
+  chalk.dim('    ') + chalk.magenta('hz wp') + chalk.dim('                           List work projects (alias)'),
+  chalk.dim('    ') + chalk.green('hz work start "Fix bug"') + chalk.dim('         Start work'),
+  chalk.dim('    ') + chalk.green('hz work done abc') + chalk.dim('                Mark work with hash abc as done'),
+  '',
+  chalk.blue('  Dashboard:'),
+  chalk.dim('    ') + chalk.cyan('hz projects') + chalk.dim('                     List dashboard projects'),
+  chalk.dim('    ') + chalk.cyan('hz projects -v') + chalk.dim('                  Verbose (para-wise with sprint counts)'),
+  chalk.dim('    ') + chalk.cyan('hz projects open "Acme"') + chalk.dim('         Link project to this directory'),
+  chalk.dim('    ') + chalk.cyan('hz projects open') + chalk.dim('                Show linked project and sprint'),
+  chalk.dim('    ') + chalk.cyan('hz sprints') + chalk.dim('                      List sprints'),
+  chalk.dim('    ') + chalk.cyan('hz sprints set') + chalk.dim('                  Set working sprint (interactive)'),
+  chalk.dim('    ') + chalk.cyan('hz tasks') + chalk.dim('                        List tasks in sprint'),
+  chalk.dim('    ') + chalk.cyan('hz tasks -d') + chalk.dim('                     List tasks with all stories'),
+  chalk.dim('    ') + chalk.cyan('hz tasks -v') + chalk.dim('                     Interactive: pick task, pick story'),
+  chalk.dim('    ') + chalk.cyan('hz tasks 2') + chalk.dim('                      Show task 2 and its stories'),
+  chalk.dim('    ') + chalk.cyan('hz tasks 2 4') + chalk.dim('                    Show story 4 of task 2'),
+  chalk.dim('    ') + chalk.cyan('hz tasks 2 4 done') + chalk.dim('               Mark story as Done'),
   '',
 ].join('\n');
-
-program.addHelpText('beforeAll', (ctx) => (ctx.command.parent === null ? rootHelpBefore : ''));
-program.addHelpText('afterAll', (ctx) => (ctx.command.parent === null ? rootHelpAfter : ''));
 
 function inheritHelpAndExit(cmd: Command, parent: Command) {
   cmd.copyInheritedSettings(parent);

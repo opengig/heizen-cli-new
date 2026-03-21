@@ -1,3 +1,4 @@
 dist
 node_modules
 *.lock
+src/index.ts
