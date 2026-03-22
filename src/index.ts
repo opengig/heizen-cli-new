@@ -94,6 +94,7 @@ const rootHelpBefore = [
   chalk.dim('  ') + chalk.cyan('hz resources') + chalk.dim('                     List project resources (documents, Figma, repos)'),
   '',
   chalk.dim('  ') + chalk.cyan('hz wiki [index]') + chalk.dim('                    List wiki documents or view document content'),
+  chalk.dim('        ') + chalk.yellow('-d, --details') + chalk.dim('               Show document details only (no content)'),
   '',
   chalk.dim('  Auth: hz work login for worklog. Set HEIZEN_DASHBOARD_TOKEN for dashboard.'),
   '',
@@ -133,6 +134,7 @@ const rootHelpAfter = [
   chalk.dim('    ') + chalk.cyan('hz resources') + chalk.dim('                     List project resources'),
   chalk.dim('    ') + chalk.cyan('hz wiki') + chalk.dim('                         List wiki documents'),
   chalk.dim('    ') + chalk.cyan('hz wiki 3') + chalk.dim('                       View wiki document 3'),
+  chalk.dim('    ') + chalk.cyan('hz wiki 3 -d') + chalk.dim('                     Show wiki document 3 details only'),
   '',
 ].join('\n');
 

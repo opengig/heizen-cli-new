@@ -7,9 +7,10 @@ import { getLinkedProject } from './common/index.js';
 import type { MeetingRecord } from '../schemas/dashboard/index.js';
 
 function formatDuration(seconds: number): string {
-  const m = Math.floor(seconds / 60);
-  const s = seconds % 60;
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  const totalSecs = Math.floor(seconds);
+  const m = Math.floor(totalSecs / 60);
+  const s = totalSecs % 60;
+  return `${m}m ${s}s`;
 }
 
 function formatDateTime(iso: string): string {
@@ -26,7 +27,7 @@ function printMeetingDetails(meeting: MeetingRecord) {
   const creatorName = [meeting.creator.first_name, meeting.creator.last_name].filter(Boolean).join(' ') || '—';
   console.log(chalk.bold(meeting.title));
   console.log('');
-  console.log(chalk.dim(`Date: ${formatDateTime(meeting.metadata.startDate)} – ${formatDateTime(meeting.metadata.endDate)}`));
+  console.log(chalk.dim(`Date: ${formatDateTime(meeting.metadata.startDate)}`));
   console.log(chalk.dim(`Creator: ${creatorName}`));
   console.log(chalk.dim(`Duration: ${formatDuration(meeting.metadata.durationInSeconds)}`));
   console.log(chalk.dim(`Stories created: ${meeting.isStoriesCreated ? 'Yes' : 'No'}`));

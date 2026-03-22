@@ -1,10 +1,8 @@
 import { Command } from 'commander';
 import chalk, { ChalkInstance } from 'chalk';
-import Table from 'cli-table3';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
 import { getLinkedProject } from './common/index.js';
-import type { ProjectResource } from '../schemas/dashboard/index.js';
 
 function resourceTypeColor(type: string): ChalkInstance {
   const t = (type ?? '').toLowerCase();
@@ -14,11 +12,13 @@ function resourceTypeColor(type: string): ChalkInstance {
   return chalk.gray;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
+function formatDateTime(iso: string): string {
+  return new Date(iso).toLocaleString('en-GB', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
   });
 }
 
@@ -36,18 +36,14 @@ export const resourcesCommand = new Command('resources')
         return;
       }
 
-      const table = new Table({
-        head: ['#', 'Name', 'Type', 'Date', 'URL'],
-        colWidths: [4, 30, 14, 12, 50],
+      resources.forEach((r) => {
+        const typeStr = (r.resourceType ?? 'unknown') as string;
+        const typeColored = resourceTypeColor(typeStr)(`[${typeStr}]`);
+        console.log(`${r.resourceName} ${typeColored}`);
+        console.log(chalk.dim(`Added: ${formatDateTime(r.updatedAt)}`));
+        console.log(r.resourceURL);
+        console.log('');
       });
-
-      resources.forEach((r, i) => {
-        const typeColored = resourceTypeColor(r.resourceType as string)(r.resourceType as string);
-        table.push([i + 1, r.resourceName, typeColored, formatDate(r.updatedAt), r.resourceURL]);
-      });
-
-      console.log(table.toString());
-      console.log(chalk.dim('URLs are copyable; in many terminals they are clickable.'));
     } catch (err) {
       console.error(chalk.red((err as Error).message));
       process.exit(2);

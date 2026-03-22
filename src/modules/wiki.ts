@@ -31,27 +31,19 @@ function creatorName(creator: { first_name: string; last_name: string }): string
   return [creator.first_name, creator.last_name].filter(Boolean).join(' ') || '—';
 }
 
-function printDocumentMetadata(doc: ProjectDocument) {
-  console.log(chalk.bold(doc.title));
-  console.log('');
-  console.log(chalk.dim(`Project: ${doc.project_id}`));
+function printDocumentDetailsOnly(doc: ProjectDocument) {
   console.log(chalk.dim(`Creator: ${creatorName(doc.creator)}`));
   console.log(chalk.dim(`Public: ${doc.is_public ? 'Yes' : 'No'}`));
-  if (doc.is_public) {
-    console.log(chalk.dim(`Access: ${doc.public_access_level}`));
-  }
   console.log(chalk.dim(`Created: ${formatDateTime(doc.created_at)}`));
   console.log(chalk.dim(`Updated: ${formatDateTime(doc.updated_at)}`));
-  if (doc.confluence_page_url) {
-    console.log(chalk.dim(`Confluence: ${doc.confluence_page_url}`));
-  }
-  console.log('');
 }
 
 export const wikiCommand = new Command('wiki')
   .description('List wiki documents or view document content')
+  .option('-d, --details', 'Show document details only (no content)')
   .argument('[docIndex]', 'Document index (1-based)')
-  .action(async (docIndexStr) => {
+  .action(async function (docIndexStr) {
+    const opts = this.opts();
     try {
       const project = await getLinkedProject();
       const token = requireDashboardAuth();
@@ -77,9 +69,12 @@ export const wikiCommand = new Command('wiki')
         }
 
         const doc = await client.getWikiDocument(node.id);
-        printDocumentMetadata(doc);
-        console.log(chalk.bold('Content'));
-        console.log('—'.repeat(40));
+
+        if (opts.details) {
+          printDocumentDetailsOnly(doc);
+          return;
+        }
+
         console.log(doc.markdown || chalk.gray('(empty)'));
         return;
       }
