@@ -40,3 +40,17 @@ export async function getActiveSprintInfo(): Promise<{ name: string; status: str
   const sprint = project?.sprints?.find((s) => s.id === ws.activeSprintId);
   return sprint ? { name: sprint.name, status: sprint.status } : null;
 }
+
+export async function getLinkedProject(): Promise<DashboardProject> {
+  const ws = await getWorkspaceState();
+  const linkedId = getLinkedDashboardProjectId(ws);
+  if (!linkedId) {
+    throw new Error('No project linked. Run hz projects open "project name" first.');
+  }
+  const projects = await getProjectsCachedOrFetch(false);
+  const project = projects.find((p) => p.id === linkedId);
+  if (!project) {
+    throw new Error('Linked project not found. Run hz projects to refresh.');
+  }
+  return project;
+}

@@ -4,6 +4,9 @@ import { projectsCommand } from './modules/projects.js';
 import { workCommand } from './modules/work/index.js';
 import { sprintsCommand } from './modules/sprints.js';
 import { taskCommand } from './modules/task.js';
+import { meetingsCommand } from './modules/meetings.js';
+import { resourcesCommand } from './modules/resources.js';
+import { wikiCommand } from './modules/wiki.js';
 
 process.exitCode = 0;
 
@@ -84,6 +87,14 @@ const rootHelpBefore = [
   chalk.dim('        ') + chalk.gray('[storyIndex]') + chalk.dim('                1-based story index'),
   chalk.dim('        ') + chalk.gray('[status]') + chalk.dim('                    done | review | todo | inprogress'),
   '',
+  chalk.dim('  ') + chalk.cyan('hz meetings [index]') + chalk.dim('                 List meeting recordings (interactive) or view details'),
+  chalk.dim('        ') + chalk.yellow('-s, --summary') + chalk.dim('               Show summary'),
+  chalk.dim('        ') + chalk.yellow('-t, --transcript') + chalk.dim('            Show transcript'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz resources') + chalk.dim('                     List project resources (documents, Figma, repos)'),
+  '',
+  chalk.dim('  ') + chalk.cyan('hz wiki [index]') + chalk.dim('                    List wiki documents or view document content'),
+  '',
   chalk.dim('  Auth: hz work login for worklog. Set HEIZEN_DASHBOARD_TOKEN for dashboard.'),
   '',
 ].join('\n');
@@ -117,6 +128,11 @@ const rootHelpAfter = [
   chalk.dim('    ') + chalk.cyan('hz tasks 2') + chalk.dim('                      Show task 2 and its stories'),
   chalk.dim('    ') + chalk.cyan('hz tasks 2 4') + chalk.dim('                    Show story 4 of task 2'),
   chalk.dim('    ') + chalk.cyan('hz tasks 2 4 done') + chalk.dim('               Mark story as Done'),
+  chalk.dim('    ') + chalk.cyan('hz meetings') + chalk.dim('                     List meetings (interactive)'),
+  chalk.dim('    ') + chalk.cyan('hz meetings 4 -s') + chalk.dim('                Show summary of meeting 4'),
+  chalk.dim('    ') + chalk.cyan('hz resources') + chalk.dim('                     List project resources'),
+  chalk.dim('    ') + chalk.cyan('hz wiki') + chalk.dim('                         List wiki documents'),
+  chalk.dim('    ') + chalk.cyan('hz wiki 3') + chalk.dim('                       View wiki document 3'),
   '',
 ].join('\n');
 
@@ -131,11 +147,17 @@ inheritHelpAndExit(projectsCommand, program);
 inheritHelpAndExit(workCommand, program);
 inheritHelpAndExit(sprintsCommand, program);
 inheritHelpAndExit(taskCommand, program);
+inheritHelpAndExit(meetingsCommand, program);
+inheritHelpAndExit(resourcesCommand, program);
+inheritHelpAndExit(wikiCommand, program);
 
 program.addCommand(projectsCommand);
 program.addCommand(workCommand);
 program.addCommand(sprintsCommand);
 program.addCommand(taskCommand);
+program.addCommand(meetingsCommand);
+program.addCommand(resourcesCommand);
+program.addCommand(wikiCommand);
 
 // Aliases: hz wa => hz work active, hz wp => hz work projects
 const args = process.argv.slice(2);
