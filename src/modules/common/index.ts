@@ -2,7 +2,7 @@ import { createDashboardClient } from '../../api/index.js';
 import { requireDashboardAuth } from '../../config/index.js';
 import { getCachedProjects, cacheProjects } from '../../db/index.js';
 import { getWorkspaceState, getLinkedDashboardProjectId } from '../../db/repositories/workspace.repository.js';
-import type { DashboardProject, FeatureTask } from '../../schemas/dashboard.js';
+import type { DashboardProject, FeatureTask } from '../../schemas/dashboard/index.js';
 
 export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
   if (active === undefined || active === false) {

@@ -1,5 +1,5 @@
 import type { DashboardServiceClient } from '../client.js';
-import { UserStorySchema, type UserStory } from '../../../schemas/dashboard.js';
+import { UserStorySchema, type UserStory } from '../../../schemas/dashboard/index.js';
 
 export async function getStory(client: DashboardServiceClient, storyId: string): Promise<UserStory> {
   const raw = await client.request<unknown>(`/tasks/user-stories/story/${storyId}`);

@@ -1,5 +1,5 @@
 import type { DashboardServiceClient } from '../client.js';
-import { SprintBoardResponseSchema, type FeatureTask } from '../../../schemas/dashboard.js';
+import { SprintBoardResponseSchema, type FeatureTask } from '../../../schemas/dashboard/index.js';
 
 export async function getSprintBoard(
   client: DashboardServiceClient,

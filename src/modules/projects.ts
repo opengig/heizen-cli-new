@@ -8,7 +8,7 @@ import {
   setActiveSprint,
   getWorkspaceState,
 } from '../db/repositories/workspace.repository.js';
-import type { DashboardProject, Sprint } from '../schemas/dashboard.js';
+import type { DashboardProject, Sprint } from '../schemas/dashboard/index.js';
 
 function sortSprintsByLatest(sprints: Sprint[]): Sprint[] {
   return [...sprints].sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
