@@ -1,30 +1,13 @@
 /**
- * Config loader - reads auth from environment variables.
- * Supports HEIZEN_* or legacy names for compatibility.
+ * Config loader - reads auth from credential storage (keytar/db).
  */
 
-export function getWorklogCookie(): string {
-  const cookie = process.env.HEIZEN_WORKLOG_COOKIE ?? process.env.WORKLOG_COOKIE ?? '';
-  return cookie;
-}
+import { getDashboardToken } from '../credentials/index.js';
 
-export function getDashboardToken(): string {
-  const token = process.env.HEIZEN_DASHBOARD_TOKEN ?? process.env.DASHBOARD_TOKEN ?? '';
-  return token;
-}
-
-export function requireWorklogAuth(): string {
-  const cookie = getWorklogCookie();
-  if (!cookie) {
-    throw new Error('Worklog auth required. Set HEIZEN_WORKLOG_COOKIE or WORKLOG_COOKIE in .env');
-  }
-  return cookie;
-}
-
-export function requireDashboardAuth(): string {
-  const token = getDashboardToken();
+export async function requireDashboardAuth(): Promise<string> {
+  const token = await getDashboardToken();
   if (!token) {
-    throw new Error('Dashboard auth required. Set HEIZEN_DASHBOARD_TOKEN or DASHBOARD_TOKEN in .env');
+    throw new Error('Dashboard auth required. Run hz token to sign in.');
   }
   return token;
 }

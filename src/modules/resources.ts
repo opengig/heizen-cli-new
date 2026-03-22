@@ -48,7 +48,7 @@ export const resourcesCommand = new Command('resources')
     const opts = this.opts();
     try {
       const project = await getLinkedProject();
-      const token = requireDashboardAuth();
+      const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
       const resources = await client.getProjectResources(project.id);
 

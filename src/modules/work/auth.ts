@@ -41,8 +41,11 @@ export const loginCommand = new Command('login').description('Interactive login'
       process.exit(2);
     }
 
-    await setWorklogAuth(cookieString, { userId, projects });
+    const { usedKeytar } = await setWorklogAuth(cookieString, { userId, projects });
     console.log(chalk.green('Logged in successfully.'));
+    if (!usedKeytar) {
+      console.log(chalk.yellow('Session saved (keytar unavailable, stored in local db).'));
+    }
   } catch (err) {
     console.error(chalk.red((err as Error).message));
     process.exit(2);
@@ -59,8 +62,11 @@ export const refreshCommand = new Command('refresh').description('Refetch from u
     };
     const client = createWorklogClient(cookie, onUnauthorized);
     const { userId, projects } = await client.getUserData();
-    await setWorklogAuth(cookie, { userId, projects });
+    const { usedKeytar } = await setWorklogAuth(cookie, { userId, projects });
     console.log(chalk.green('Refreshed user data.'));
+    if (!usedKeytar) {
+      console.log(chalk.yellow('Session saved (keytar unavailable, stored in local db).'));
+    }
   } catch (err) {
     console.error(chalk.red((err as Error).message));
     process.exit(2);

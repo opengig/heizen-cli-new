@@ -11,7 +11,7 @@ export async function getProjectsCachedOrFetch(active?: boolean): Promise<Dashbo
       return cached as DashboardProject[];
     }
   }
-  const token = requireDashboardAuth();
+  const token = await requireDashboardAuth();
   const client = createDashboardClient(token);
   const projects = await client.getProjects(active);
   if (active === undefined || active === false) {
@@ -25,7 +25,7 @@ export async function getSprintBoardTasks(): Promise<FeatureTask[]> {
   if (!ws.activeSprintId) {
     throw new Error('No active sprint. Run hz sprints set first.');
   }
-  const token = requireDashboardAuth();
+  const token = await requireDashboardAuth();
   const client = createDashboardClient(token);
   const { tasks } = await client.getSprintBoard(ws.activeSprintId);
   return tasks;
