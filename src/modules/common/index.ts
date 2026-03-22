@@ -2,7 +2,7 @@ import { createDashboardClient } from '../../api/index.js';
 import { requireDashboardAuth } from '../../config/index.js';
 import { getCachedProjects, cacheProjects } from '../../db/index.js';
 import { getWorkspaceState, getLinkedDashboardProjectId } from '../../db/repositories/workspace.repository.js';
-import type { DashboardProject, FeatureTask } from '../../schemas/dashboard.js';
+import type { DashboardProject, FeatureTask } from '../../schemas/dashboard/index.js';
 
 export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
   if (active === undefined || active === false) {
@@ -39,4 +39,18 @@ export async function getActiveSprintInfo(): Promise<{ name: string; status: str
   const project = projects.find((p) => p.id === linkedId);
   const sprint = project?.sprints?.find((s) => s.id === ws.activeSprintId);
   return sprint ? { name: sprint.name, status: sprint.status } : null;
+}
+
+export async function getLinkedProject(): Promise<DashboardProject> {
+  const ws = await getWorkspaceState();
+  const linkedId = getLinkedDashboardProjectId(ws);
+  if (!linkedId) {
+    throw new Error('No project linked. Run hz projects open "project name" first.');
+  }
+  const projects = await getProjectsCachedOrFetch(false);
+  const project = projects.find((p) => p.id === linkedId);
+  if (!project) {
+    throw new Error('Linked project not found. Run hz projects to refresh.');
+  }
+  return project;
 }

@@ -5,7 +5,7 @@ import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
 import { getSprintBoardTasks, getActiveSprintInfo } from './common/index.js';
-import type { UserStory } from '../schemas/dashboard.js';
+import type { UserStory } from '../schemas/dashboard/index.js';
 
 type StoryStatus = 'Done' | 'InReview' | 'Todo' | 'InProgress' | 'In Progress';
 

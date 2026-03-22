@@ -1,5 +1,5 @@
 import type { DashboardServiceClient } from '../client.js';
-import { ProjectsResponseSchema, type DashboardProject } from '../../../schemas/dashboard.js';
+import { ProjectsResponseSchema, type DashboardProject } from '../../../schemas/dashboard/index.js';
 
 export async function getProjects(client: DashboardServiceClient, active?: boolean): Promise<DashboardProject[]> {
   const qs = active !== undefined ? `?active=${active}` : '?active=false';
