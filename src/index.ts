@@ -1,7 +1,7 @@
 import { Command, Help } from 'commander';
 import chalk from 'chalk';
 import { projectsCommand } from './modules/projects.js';
-import { tokenCommand } from './modules/token.js';
+import { loginCommand } from './modules/login.js';
 import { workCommand } from './modules/work/index.js';
 import { sprintsCommand } from './modules/sprints.js';
 import { taskCommand } from './modules/task.js';
@@ -70,7 +70,7 @@ const rootHelpBefore = [
   '',
   chalk.bold.blue('  DASHBOARD ') + chalk.gray('(api.studio.heizen.work — projects & sprints)'),
   chalk.dim('  ' + '─'.repeat(52)),
-  chalk.dim('  ') + chalk.cyan('hz token [token]') + chalk.dim('                   Set dashboard API token (validated via /users/me)'),
+  chalk.dim('  ') + chalk.cyan('hz login') + chalk.dim('                          Sign in dashboard with browser OAuth'),
   chalk.dim('  ') + chalk.cyan('hz projects') + chalk.dim('                       List dashboard projects (table)'),
   chalk.dim('        ') + chalk.yellow('-v, --verbose') + chalk.dim('               Para-wise output with sprint counts'),
   '',
@@ -101,9 +101,9 @@ const rootHelpBefore = [
   chalk.dim('        ') + chalk.yellow('-d, --details') + chalk.dim('               Show document details only (no content)'),
   '',
   chalk.dim('  ' + '─'.repeat(52)),
-  chalk.dim(`  Auth: 'hz work login' for worklog. 'hz token' for dashboard.`),
+  chalk.dim(`  Auth: 'hz work login' for worklog. 'hz login' for dashboard.`),
   '',
-  chalk.dim('  ') + chalk.red('hz reset') + chalk.dim('                         Clear local db, pending work & auth (with confirmation)'),
+  chalk.dim('  ') + chalk.red('hz reset') + chalk.dim('                          Clear local db, pending work & auth (with confirmation)'),
   '',
 ].join('\n');
 
@@ -124,7 +124,7 @@ const rootHelpAfter = [
   chalk.dim('    ') + chalk.green('hz work done abc') + chalk.dim('                Mark work with hash abc as done'),
   '',
   chalk.blue('  Dashboard:'),
-  chalk.dim('    ') + chalk.cyan('hz token') + chalk.dim('                        Set dashboard API token'),
+  chalk.dim('    ') + chalk.cyan('hz login') + chalk.dim('                        Sign in dashboard with browser OAuth'),
   chalk.dim('    ') + chalk.cyan('hz projects') + chalk.dim('                     List dashboard projects'),
   chalk.dim('    ') + chalk.cyan('hz projects -v') + chalk.dim('                  Verbose (para-wise with sprint counts)'),
   chalk.dim('    ') + chalk.cyan('hz projects open "Acme"') + chalk.dim('         Link project to this directory'),
@@ -158,7 +158,7 @@ function inheritHelpAndExit(cmd: Command, parent: Command) {
 }
 
 inheritHelpAndExit(projectsCommand, program);
-inheritHelpAndExit(tokenCommand, program);
+inheritHelpAndExit(loginCommand, program);
 inheritHelpAndExit(workCommand, program);
 inheritHelpAndExit(sprintsCommand, program);
 inheritHelpAndExit(taskCommand, program);
@@ -168,7 +168,7 @@ inheritHelpAndExit(wikiCommand, program);
 inheritHelpAndExit(resetCommand, program);
 
 program.addCommand(projectsCommand);
-program.addCommand(tokenCommand);
+program.addCommand(loginCommand);
 program.addCommand(workCommand);
 program.addCommand(sprintsCommand);
 program.addCommand(taskCommand);

@@ -7,7 +7,7 @@ import { getDashboardToken } from '../credentials/index.js';
 export async function requireDashboardAuth(): Promise<string> {
   const token = await getDashboardToken();
   if (!token) {
-    throw new Error('Dashboard auth required. Run hz token to sign in.');
+    throw new Error('Dashboard auth required. Run hz login to sign in.');
   }
   return token;
 }

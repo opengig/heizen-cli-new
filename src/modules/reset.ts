@@ -10,7 +10,7 @@ export const resetCommand = new Command('reset')
   .action(async () => {
     try {
       console.log(chalk.red('This will clear any local state, pending worklogs, and auth tokens.'));
-      console.log(chalk.dim(`Run 'hz token' and 'hz work login' afterward.`));
+      console.log(chalk.dim(`Run 'hz login' and 'hz work login' afterward.`));
       const { confirmed } = await prompts({
         type: 'confirm',
         name: 'confirmed',
