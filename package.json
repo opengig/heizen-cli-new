@@ -1,8 +1,9 @@
 {
   "name": "heizen-cli",
+  "version": "1.0.0",
   "module": "index.ts",
   "type": "module",
-  "private": true,
+  "private": false,
   "devDependencies": {
     "@eslint/js": "^9.15.0",
     "@types/bun": "latest",
@@ -32,11 +33,16 @@
     "open": "^11.0.0"
   },
   "bin": {
-    "hz": "./dist/bin/index.js"
+    "hz": "dist/bin/index.js"
   },
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "dev": "tsx src/bin/index.ts",
     "build": "tsc",
+    "prepublishOnly": "bun run build",
     "type-check": "tsc --noEmit",
     "start": "node dist/bin/index.js",
     "lint": "eslint src",
