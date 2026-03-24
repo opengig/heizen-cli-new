@@ -3,6 +3,7 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getPendingWorks } from '../../db/repositories/pending-works.repository.js';
 import { createWorklogClient } from '../../api/index.js';
+import { missing } from '../common/index.js';
 import { requireWorklogAuth, getDateRangeForDay } from './common/index.js';
 import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
@@ -24,7 +25,12 @@ export function createListCommand() {
             colWidths: [8, 36, 22, 24],
           });
           works.forEach((w) => {
-            table.push([w.id, w.name, new Date(w.startTime).toLocaleString(), w.projectName]);
+            table.push([
+              missing(w.id),
+              missing(w.name),
+              new Date(w.startTime).toLocaleString(),
+              missing(w.projectName),
+            ]);
           });
           console.log(table.toString());
           return;
@@ -57,8 +63,8 @@ export function createListCommand() {
           colWidths: [20, 8, 14, 36],
         });
         for (const w of worklogs) {
-          const proj = (w as { project?: { name?: string } }).project;
-          table.push([proj?.name ?? '', w.hoursWorked, w.taskPhase, (w.notes ?? '').slice(0, 34)]);
+          const proj = w.project;
+          table.push([missing(proj?.name), missing(w.hoursWorked), missing(w.taskPhase), (w.notes ?? '').slice(0, 34)]);
         }
         console.log(table.toString());
       } catch (err) {

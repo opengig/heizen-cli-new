@@ -3,6 +3,16 @@ import { requireDashboardAuth } from '../../config/index.js';
 import { getCachedProjects, cacheProjects } from '../../db/index.js';
 import { getWorkspaceState, getLinkedDashboardProjectId } from '../../db/repositories/workspace.repository.js';
 import type { DashboardProject, FeatureTask } from '../../schemas/dashboard/index.js';
+import { missing, requireForAction } from './format.js';
+
+export {
+  missing,
+  MISSING,
+  requireForAction,
+  requireStringForAction,
+  displayDateTimeEnGB,
+  displayDateOnlyEnGB,
+} from './format.js';
 
 export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
   if (active === undefined || active === false) {
@@ -28,7 +38,7 @@ export async function getSprintBoardTasks(): Promise<FeatureTask[]> {
   const token = await requireDashboardAuth();
   const client = createDashboardClient(token);
   const { tasks } = await client.getSprintBoard(ws.activeSprintId);
-  return tasks;
+  return tasks ?? [];
 }
 
 export async function getActiveSprintInfo(): Promise<{ name: string; status: string } | null> {
@@ -38,7 +48,7 @@ export async function getActiveSprintInfo(): Promise<{ name: string; status: str
   const projects = await getProjectsCachedOrFetch(false);
   const project = projects.find((p) => p.id === linkedId);
   const sprint = project?.sprints?.find((s) => s.id === ws.activeSprintId);
-  return sprint ? { name: sprint.name, status: sprint.status } : null;
+  return sprint ? { name: missing(sprint.name), status: missing(sprint.status) } : null;
 }
 
 export async function getLinkedProject(): Promise<DashboardProject> {
@@ -52,5 +62,6 @@ export async function getLinkedProject(): Promise<DashboardProject> {
   if (!project) {
     throw new Error('Linked project not found. Run hz projects to refresh.');
   }
+  requireForAction('Resolving linked project', 'project id', project.id);
   return project;
 }

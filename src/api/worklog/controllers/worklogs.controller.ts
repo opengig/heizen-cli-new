@@ -1,13 +1,17 @@
 import type { WorklogServiceClient } from '../client.js';
-import {
-  GetWorklogsResponseSchema,
-  AddWorklogRequestSchema,
-  AddWorklogResponseSchema,
-  type AddWorklogRequest,
-  type AddWorklogResponse,
-  type WorklogEntry,
-} from '../../../schemas/worklog.js';
+import type { AddWorklogRequest, AddWorklogResponse, WorklogEntry } from '../../../schemas/worklog.js';
 import { parseFlight } from '../utils.js';
+
+function assertAddWorklogRequest(req: AddWorklogRequest): void {
+  if (!req.projectId) throw new Error('addWorklog requires projectId');
+  if (!req.userId) throw new Error('addWorklog requires userId');
+  if (!req.taskPhase) throw new Error('addWorklog requires taskPhase');
+  if (!req.workLogType) throw new Error('addWorklog requires workLogType');
+  if (req.hoursWorked == null || Number.isNaN(req.hoursWorked) || req.hoursWorked <= 0) {
+    throw new Error('addWorklog requires positive hoursWorked');
+  }
+  if (!req.date) throw new Error('addWorklog requires date');
+}
 
 export async function getWorklogs(
   client: WorklogServiceClient,
@@ -23,31 +27,23 @@ export async function getWorklogs(
     data: formData,
   });
 
-  const parsed = GetWorklogsResponseSchema.safeParse(raw);
-  if (!parsed.success) {
-    console.error('Schema validation failed:', parsed.error.format());
-    console.error('Raw response:', JSON.stringify(raw, null, 2));
-    throw new Error('Invalid worklogs response format');
-  }
-
-  const data = parsed.data;
-  if (Array.isArray(data)) return data as WorklogEntry[];
+  if (Array.isArray(raw)) return raw as WorklogEntry[];
   if (
-    typeof data === 'object' &&
-    data !== null &&
-    'worklogs' in data &&
-    Array.isArray((data as { worklogs?: unknown }).worklogs)
+    typeof raw === 'object' &&
+    raw !== null &&
+    'worklogs' in raw &&
+    Array.isArray((raw as { worklogs?: unknown }).worklogs)
   ) {
-    return (data as { worklogs: WorklogEntry[] }).worklogs;
+    return (raw as { worklogs: WorklogEntry[] }).worklogs;
   }
-  if (typeof data === 'object' && data !== null && 'data' in data && Array.isArray((data as { data?: unknown }).data)) {
-    return (data as { data: WorklogEntry[] }).data;
+  if (typeof raw === 'object' && raw !== null && 'data' in raw && Array.isArray((raw as { data?: unknown }).data)) {
+    return (raw as { data: WorklogEntry[] }).data;
   }
   return [];
 }
 
 export async function addWorklog(client: WorklogServiceClient, req: AddWorklogRequest): Promise<AddWorklogResponse> {
-  AddWorklogRequestSchema.parse(req);
+  assertAddWorklogRequest(req);
 
   const formData = new FormData();
   formData.append('projectId', req.projectId);
@@ -82,10 +78,5 @@ export async function addWorklog(client: WorklogServiceClient, req: AddWorklogRe
     throw new Error('Invalid add worklog response: could not find success in parsed flight');
   }
 
-  const validated = AddWorklogResponseSchema.safeParse(entry);
-  if (!validated.success) {
-    console.error('Add worklog response validation failed:', validated.error.format());
-    throw new Error('Invalid add worklog response format');
-  }
-  return validated.data;
+  return { data: entry.data as { success?: string } };
 }

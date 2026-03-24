@@ -1,5 +1,5 @@
 import type { DashboardServiceClient } from '../client.js';
-import { SprintBoardResponseSchema, type FeatureTask } from '../../../schemas/dashboard/index.js';
+import type { FeatureTask } from '../../../schemas/dashboard/index.js';
 
 export async function getSprintBoard(
   client: DashboardServiceClient,
@@ -7,12 +7,8 @@ export async function getSprintBoard(
 ): Promise<{ tasks: FeatureTask[] }> {
   const raw = await client.request<unknown>(`/tasks/sprint-board/${sprintId}`);
 
-  const parsed = SprintBoardResponseSchema.safeParse(raw);
-  if (!parsed.success) {
-    console.error('Schema validation failed:', parsed.error.format());
-    console.error('Raw response:', JSON.stringify(raw, null, 2));
-    throw new Error('Invalid sprint board response format');
+  if (!Array.isArray(raw)) {
+    return { tasks: [] };
   }
-
-  return { tasks: parsed.data };
+  return { tasks: raw as FeatureTask[] };
 }
