@@ -17,12 +17,10 @@ export type Work = z.infer<typeof WorkSchema>;
 
 export const WorkspaceStateSchema = z.object({
   linkedDashboardProjectId: z.string().optional(),
-  linkedProjectId: z.string().optional(), // deprecated alias, use linkedDashboardProjectId
-  linkedWorklogProjectId: z.string().optional(),
   linkedWorklogProject: z
     .object({
       id: z.string(),
-      name: z.string(),
+      name: z.string().optional().nullable(),
     })
     .optional(),
   activeSprintId: z.string().optional(),

@@ -11,11 +11,9 @@ export {
 } from './repositories/works.repository.js';
 export {
   getWorkspaceState,
-  getLinkedDashboardProjectId,
   setLinkedDashboardProject,
   setLinkedWorklogProject,
   setActiveSprint,
-  getLinkedWorklogProject,
 } from './repositories/workspace.repository.js';
 export {
   getWorklogCookie,

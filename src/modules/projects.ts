@@ -3,7 +3,6 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
 import {
-  getLinkedDashboardProjectId,
   setLinkedDashboardProject,
   setActiveSprint,
   getWorkspaceState,
@@ -104,11 +103,11 @@ const projectsCommand = new Command('projects')
           const projects = await getProjectsCachedOrFetch(false);
 
           if (!name) {
-            if (!getLinkedDashboardProjectId(ws)) {
+            if (!ws.linkedDashboardProjectId) {
               console.log(chalk.gray('No project linked. Run hz projects open "project name".'));
               return;
             }
-            const project = projects.find((p) => p.id === getLinkedDashboardProjectId(ws));
+            const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
             if (!project) {
               console.log(chalk.gray('Linked project not found. Run hz projects open "project name" to re-link.'));
               return;

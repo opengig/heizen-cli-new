@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import crypto from 'node:crypto';
-import { getLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
+import { getWorkspaceState } from '../../db/repositories/workspace.repository.js';
 import {
   addPendingWork,
   removePendingWork,
@@ -18,7 +18,8 @@ export const startCommand = new Command('start')
   .argument('<name>', 'Work name')
   .action(async (name) => {
     try {
-      const linked = await getLinkedWorklogProject();
+      const ws = await getWorkspaceState();
+      const linked = ws.linkedWorklogProject;
       if (!linked) {
         console.error(chalk.red('No active project. Run hz work active "project name" first.'));
         process.exit(2);
