@@ -1,0 +1,2 @@
+; npm publish token
+//registry.npmjs.org/:_authToken=npm_xx
