@@ -70,6 +70,7 @@ export const DbSchema = z.object({
     })
     .optional(),
   worklogAuth: WorklogAuthSchema.optional(),
+  dashboardToken: z.string().optional(),
   recentWorklogProjects: z
     .array(
       z.object({

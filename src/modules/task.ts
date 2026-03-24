@@ -169,7 +169,7 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Story not found.'));
           process.exit(2);
         }
-        const token = requireDashboardAuth();
+        const token = await requireDashboardAuth();
         const client = createDashboardClient(token);
         const fullStory = await client.getStory(story.id).catch(() => story as UserStory);
         (fullStory as UserStory).status = apiStatus;

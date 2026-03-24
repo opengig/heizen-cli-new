@@ -42,7 +42,7 @@ export const meetingsCommand = new Command('meetings')
   .action(async (meetingIndexStr, opts) => {
     try {
       const project = await getLinkedProject();
-      const token = requireDashboardAuth();
+      const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
       const meetings = await client.getMeetingRecords(project.id);
 

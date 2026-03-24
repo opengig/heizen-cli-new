@@ -46,7 +46,7 @@ export const wikiCommand = new Command('wiki')
     const opts = this.opts();
     try {
       const project = await getLinkedProject();
-      const token = requireDashboardAuth();
+      const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
       const tree = await client.getWikiTree(project.uniqueName);
       const flat = flattenWikiNodes(tree);
