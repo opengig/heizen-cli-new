@@ -3,7 +3,7 @@ import chalk, { ChalkInstance } from 'chalk';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getLinkedProject } from './common/index.js';
+import { displayDateTimeEnGB, getLinkedProject, missing, requireStringForAction } from './common/index.js';
 import type { ProjectResource } from '../schemas/dashboard/index.js';
 
 function resourceTypeColor(type: string): ChalkInstance {
@@ -14,17 +14,8 @@ function resourceTypeColor(type: string): ChalkInstance {
   return chalk.gray;
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function formatResourceUrl(url: string): string {
+function formatResourceUrl(url: string | undefined): string {
+  if (!url) return missing(url);
   try {
     return encodeURI(url);
   } catch {
@@ -35,8 +26,8 @@ function formatResourceUrl(url: string): string {
 function printResourceDetails(r: ProjectResource) {
   const typeStr = (r.resourceType ?? 'unknown') as string;
   const typeColored = resourceTypeColor(typeStr)(`[${typeStr}]`);
-  console.log(`${r.resourceName} ${typeColored}`);
-  console.log(chalk.dim(`Added: ${formatDateTime(r.updatedAt)}`));
+  console.log(`${missing(r.resourceName)} ${typeColored}`);
+  console.log(chalk.dim(`Added: ${displayDateTimeEnGB(r.updatedAt)}`));
   console.log(chalk.dim(formatResourceUrl(r.resourceURL)));
   console.log('');
 }
@@ -48,9 +39,10 @@ export const resourcesCommand = new Command('resources')
     const opts = this.opts();
     try {
       const project = await getLinkedProject();
+      const projectId = requireStringForAction('Listing resources', 'project id', project.id);
       const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
-      const resources = await client.getProjectResources(project.id);
+      const resources = await client.getProjectResources(projectId);
 
       if (resources.length === 0) {
         console.log(chalk.gray('No resources in this project.'));
@@ -65,7 +57,7 @@ export const resourcesCommand = new Command('resources')
       resources.forEach((r, i) => {
         const typeStr = (r.resourceType ?? 'unknown') as string;
         const typeColored = resourceTypeColor(typeStr)(`[${typeStr}]`);
-        console.log(chalk.cyan(`${i + 1}. ${r.resourceName} `) + typeColored);
+        console.log(chalk.cyan(`${i + 1}. ${missing(r.resourceName)} `) + typeColored);
       });
 
       const { resourceNum } = await prompts({
@@ -86,7 +78,7 @@ export const resourcesCommand = new Command('resources')
       }
 
       console.log('');
-      console.log(chalk.dim(`Added: ${formatDateTime(resource.updatedAt)}`));
+      console.log(chalk.dim(`Added: ${displayDateTimeEnGB(resource.updatedAt)}`));
       console.log(chalk.dim(formatResourceUrl(resource.resourceURL)));
     } catch (err) {
       console.error(chalk.red((err as Error).message));

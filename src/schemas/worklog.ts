@@ -1,65 +1,55 @@
-import { z } from 'zod';
+/** Nested project on a worklog entry */
+export interface WorklogEntryProject {
+  id?: string;
+  name?: string;
+  [key: string]: unknown;
+}
 
 /** Single worklog entry (inferred from API usage) */
-export const WorklogEntrySchema = z
-  .object({
-    id: z.string().optional(),
-    projectId: z.string(),
-    userId: z.string(),
-    taskPhase: z.string(),
-    workLogType: z.string(),
-    hoursWorked: z.number(),
-    notes: z.string().optional().nullable(),
-    date: z.string().optional(),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
-    project: z
-      .object({
-        id: z.string(),
-        name: z.string().optional(),
-      })
-      .passthrough()
-      .optional(),
-  })
-  .passthrough();
+export interface WorklogEntry {
+  id?: string;
+  projectId?: string;
+  userId?: string;
+  taskPhase?: string;
+  workLogType?: string;
+  hoursWorked?: number;
+  notes?: string | null;
+  date?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  project?: WorklogEntryProject;
+  [key: string]: unknown;
+}
 
 /** Response from POST /action/get-worklogs */
-export const GetWorklogsResponseSchema = z.union([
-  z.array(WorklogEntrySchema),
-  z.object({
-    worklogs: z.array(WorklogEntrySchema).optional(),
-    data: z.array(WorklogEntrySchema).optional(),
-  }),
-]);
+export type GetWorklogsResponse =
+  | WorklogEntry[]
+  | {
+      worklogs?: WorklogEntry[];
+      data?: WorklogEntry[];
+    };
 
 /** Project from user.data (worklog projects - different IDs from dashboard) */
-export const WorklogProjectSchema = z
-  .object({
-    id: z.string(),
-    name: z.string().optional(),
-  })
-  .passthrough();
+export interface WorklogProject {
+  id?: string;
+  name?: string;
+  [key: string]: unknown;
+}
 
 /** Request body for adding worklog (POST /dashboard/user.data?index) */
-export const AddWorklogRequestSchema = z.object({
-  projectId: z.string(),
-  userId: z.string(),
-  taskPhase: z.string(),
-  workLogType: z.string(),
-  hoursWorked: z.number().positive(),
-  notes: z.string().optional(),
-  date: z.string(),
-});
+export interface AddWorklogRequest {
+  projectId: string;
+  userId: string;
+  taskPhase: string;
+  workLogType: string;
+  hoursWorked: number;
+  notes?: string;
+  date: string;
+}
 
 /** Parsed response from POST /dashboard/user.data?index (after parseFlight) */
-export const AddWorklogResponseSchema = z.object({
-  data: z.object({
-    success: z.string(),
-  }),
-});
-
-export type WorklogEntry = z.infer<typeof WorklogEntrySchema>;
-export type GetWorklogsResponse = z.infer<typeof GetWorklogsResponseSchema>;
-export type WorklogProject = z.infer<typeof WorklogProjectSchema>;
-export type AddWorklogRequest = z.infer<typeof AddWorklogRequestSchema>;
-export type AddWorklogResponse = z.infer<typeof AddWorklogResponseSchema>;
+export interface AddWorklogResponse {
+  data?: {
+    success?: string;
+  };
+}

@@ -4,7 +4,13 @@ import Table from 'cli-table3';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getSprintBoardTasks, getActiveSprintInfo } from './common/index.js';
+import {
+  getSprintBoardTasks,
+  getActiveSprintInfo,
+  missing,
+  parseOneBasedIndex,
+  requireStringForAction,
+} from './common/index.js';
 import type { UserStory } from '../schemas/dashboard/index.js';
 
 type StoryStatus = 'Done' | 'InReview' | 'Todo' | 'InProgress' | 'In Progress';
@@ -22,8 +28,8 @@ function parseStatus(shorthand: string): StoryStatus | null {
   return STATUS_MAP[key] ?? null;
 }
 
-function statusColor(status: string): ChalkInstance {
-  const s = status.toLowerCase();
+function statusColor(status: string | undefined): ChalkInstance {
+  const s = (status ?? '').toLowerCase();
   if (s === 'done') return chalk.green;
   if (s === 'inreview') return chalk.yellow;
   if (s === 'inprogress' || s === 'in progress') return chalk.cyan;
@@ -33,18 +39,18 @@ function statusColor(status: string): ChalkInstance {
 
 function formatStoryLine(i: number, s: UserStory): string {
   const color = statusColor(s.status);
-  return color(`${i + 1}. ${s.title} [${s.estimation} hrs]`);
+  return color(`${i + 1}. ${missing(s.title)} [${missing(s.estimation)} hrs]`);
 }
 
 function printStoryDetails(story: UserStory) {
-  console.log(chalk.bold(`Story: ${story.title}\n`));
-  console.log(chalk.dim(`Status: ${story.status}`));
-  console.log(chalk.dim(`Priority: ${story.priority}`));
+  console.log(chalk.bold(`Story: ${missing(story.title)}\n`));
+  console.log(chalk.dim(`Status: ${missing(story.status)}`));
+  console.log(chalk.dim(`Priority: ${missing(story.priority)}`));
   if (story.assignee) {
     const name = [story.assignee.firstName, story.assignee.lastName].filter(Boolean).join(' ');
-    if (name) console.log(chalk.dim(`Assignee: ${name} (${story.assignee.email})`));
+    if (name) console.log(chalk.dim(`Assignee: ${name} (${missing(story.assignee.email)})`));
   }
-  console.log(chalk.dim(`Estimation: ${story.estimation}`));
+  console.log(chalk.dim(`Estimation: ${missing(story.estimation)}`));
   if (story.description) {
     console.log(chalk.dim(`Description: ${story.description.slice(0, 300)}`));
   }
@@ -80,7 +86,7 @@ export const taskCommand = new Command('tasks')
 
       if (opts.view) {
         for (let i = 0; i < tasks.length; i++) {
-          console.log(chalk.cyan(`${i + 1}. ${tasks[i].title}`));
+          console.log(chalk.cyan(`${i + 1}. ${missing(tasks[i].title)}`));
         }
         const { taskNum } = await prompts({
           type: 'number',
@@ -96,7 +102,7 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task not found.'));
           process.exit(2);
         }
-        const stories = task.stories;
+        const stories = task.stories ?? [];
         if (stories.length === 0) {
           console.log(chalk.gray('No stories in this task.'));
           return;
@@ -125,16 +131,17 @@ export const taskCommand = new Command('tasks')
 
       if (opts.details) {
         tasks.forEach((t, i) => {
-          console.log(chalk.bold(`${i + 1}. ${t.title}`));
-          if (t.stories.length === 0) {
+          console.log(chalk.bold(`${i + 1}. ${missing(t.title)}`));
+          const stories = t.stories ?? [];
+          if (stories.length === 0) {
             console.log(chalk.gray('  (empty)'));
           } else {
             const table = new Table({
               head: ['#', 'Name', 'Estimate', 'Status'],
               colWidths: [4, 40, 10, 12],
             });
-            t.stories.forEach((s, j) => {
-              table.push([j + 1, s.title, s.estimation, s.status]);
+            stories.forEach((s, j) => {
+              table.push([j + 1, missing(s.title), missing(s.estimation), missing(s.status)]);
             });
             console.log(table.toString());
           }
@@ -153,9 +160,9 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task and story index required to update status.'));
           process.exit(1);
         }
-        const taskIndex = parseInt(taskIndexStr, 10);
-        const storyIndex = parseInt(storyIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1 || isNaN(storyIndex) || storyIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        const storyIndex = parseOneBasedIndex(storyIndexStr);
+        if (taskIndex === null || storyIndex === null) {
           console.error(chalk.red('Invalid task or story index.'));
           process.exit(1);
         }
@@ -164,24 +171,26 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task not found.'));
           process.exit(2);
         }
-        const story = task.stories[storyIndex - 1];
+        const storyList = task.stories ?? [];
+        const story = storyList[storyIndex - 1];
         if (!story) {
           console.error(chalk.red('Story not found.'));
           process.exit(2);
         }
+        const storyId = requireStringForAction('Updating story status', 'story id', story.id);
         const token = await requireDashboardAuth();
         const client = createDashboardClient(token);
-        const fullStory = await client.getStory(story.id).catch(() => story as UserStory);
+        const fullStory = await client.getStory(storyId).catch(() => story as UserStory);
         (fullStory as UserStory).status = apiStatus;
         await client.updateStory(fullStory as UserStory);
-        console.log(chalk.green(`Marked story as ${apiStatus}: ${story.title}`));
+        console.log(chalk.green(`Marked story as ${apiStatus}: ${missing(story.title)}`));
         return;
       }
 
       if (storyIndexStr && !statusStr) {
-        const taskIndex = parseInt(taskIndexStr, 10);
-        const storyIndex = parseInt(storyIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1 || isNaN(storyIndex) || storyIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        const storyIndex = parseOneBasedIndex(storyIndexStr);
+        if (taskIndex === null || storyIndex === null) {
           console.error(chalk.red('Invalid task or story index.'));
           process.exit(1);
         }
@@ -190,7 +199,8 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task not found.'));
           process.exit(2);
         }
-        const story = task.stories[storyIndex - 1];
+        const storyList = task.stories ?? [];
+        const story = storyList[storyIndex - 1];
         if (!story) {
           console.error(chalk.red('Story not found.'));
           process.exit(2);
@@ -200,8 +210,8 @@ export const taskCommand = new Command('tasks')
       }
 
       if (taskIndexStr) {
-        const taskIndex = parseInt(taskIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        if (taskIndex === null) {
           console.error(chalk.red('Invalid task index.'));
           process.exit(1);
         }
@@ -210,19 +220,22 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task not found.'));
           process.exit(2);
         }
-        console.log(chalk.bold(`Task: ${task.title}\n`));
-        if (task.stories.length === 0) {
+        console.log(chalk.bold(`Task: ${missing(task.title)}\n`));
+        const stories = task.stories ?? [];
+        if (stories.length === 0) {
           console.log(chalk.gray('No stories in this task.'));
         } else {
-          task.stories.forEach((s, i) => {
-            console.log(chalk.dim(`${i + 1}. ${s.title} | est:${s.estimation} | ${s.status}`));
+          stories.forEach((s, i) => {
+            console.log(
+              chalk.dim(`${i + 1}. ${missing(s.title)} | est:${missing(s.estimation)} | ${missing(s.status)}`)
+            );
           });
         }
         return;
       }
 
       tasks.forEach((t, i) => {
-        console.log(chalk.cyan(`${i + 1}. ${t.title}`));
+        console.log(chalk.cyan(`${i + 1}. ${missing(t.title)}`));
       });
     } catch (err) {
       console.error(chalk.red((err as Error).message));

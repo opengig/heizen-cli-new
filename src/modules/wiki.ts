@@ -3,7 +3,13 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getLinkedProject } from './common/index.js';
+import {
+  displayDateTimeEnGB,
+  getLinkedProject,
+  missing,
+  parseOneBasedIndex,
+  requireStringForAction,
+} from './common/index.js';
 import type { DocumentNode, ProjectDocument } from '../schemas/dashboard/index.js';
 
 function flattenWikiNodes(nodes: DocumentNode[]): DocumentNode[] {
@@ -17,25 +23,16 @@ function flattenWikiNodes(nodes: DocumentNode[]): DocumentNode[] {
   return result;
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
-function creatorName(creator: { first_name: string; last_name: string }): string {
+function creatorName(creator: { first_name?: string; last_name?: string } | undefined): string {
+  if (!creator) return missing(undefined);
   return [creator.first_name, creator.last_name].filter(Boolean).join(' ') || '—';
 }
 
 function printDocumentDetailsOnly(doc: ProjectDocument) {
   console.log(chalk.dim(`Creator: ${creatorName(doc.creator)}`));
   console.log(chalk.dim(`Public: ${doc.is_public ? 'Yes' : 'No'}`));
-  console.log(chalk.dim(`Created: ${formatDateTime(doc.created_at)}`));
-  console.log(chalk.dim(`Updated: ${formatDateTime(doc.updated_at)}`));
+  console.log(chalk.dim(`Created: ${displayDateTimeEnGB(doc.created_at)}`));
+  console.log(chalk.dim(`Updated: ${displayDateTimeEnGB(doc.updated_at)}`));
 }
 
 export const wikiCommand = new Command('wiki')
@@ -46,9 +43,10 @@ export const wikiCommand = new Command('wiki')
     const opts = this.opts();
     try {
       const project = await getLinkedProject();
+      const uniqueName = requireStringForAction('Listing wiki documents', 'project unique name', project.uniqueName);
       const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
-      const tree = await client.getWikiTree(project.uniqueName);
+      const tree = await client.getWikiTree(uniqueName);
       const flat = flattenWikiNodes(tree);
 
       if (flat.length === 0) {
@@ -57,8 +55,8 @@ export const wikiCommand = new Command('wiki')
       }
 
       if (docIndexStr) {
-        const idx = parseInt(docIndexStr, 10);
-        if (isNaN(idx) || idx < 1) {
+        const idx = parseOneBasedIndex(docIndexStr);
+        if (idx === null) {
           console.error(chalk.red('Invalid document index.'));
           process.exit(1);
         }
@@ -68,7 +66,8 @@ export const wikiCommand = new Command('wiki')
           process.exit(2);
         }
 
-        const doc = await client.getWikiDocument(node.id);
+        const documentId = requireStringForAction('Opening wiki document', 'document id', node.id);
+        const doc = await client.getWikiDocument(documentId);
 
         if (opts.details) {
           printDocumentDetailsOnly(doc);
@@ -89,8 +88,8 @@ export const wikiCommand = new Command('wiki')
           i + 1,
           n.title || '(untitled)',
           creatorName(n.creator),
-          formatDateTime(n.created_at),
-          formatDateTime(n.updated_at),
+          displayDateTimeEnGB(n.created_at),
+          displayDateTimeEnGB(n.updated_at),
         ]);
       });
 

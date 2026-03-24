@@ -2,34 +2,21 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import prompts from 'prompts';
-import {
-  getWorkspaceState,
-  getLinkedDashboardProjectId,
-  setActiveSprint,
-} from '../db/repositories/workspace.repository.js';
-import { getProjectsCachedOrFetch } from './common/index.js';
+import { getWorkspaceState, setActiveSprint } from '../db/repositories/workspace.repository.js';
+import { displayDateOnlyEnGB, getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
 import { sortSprintsByLatest } from './projects.js';
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  });
-}
 
 export const sprintsCommand = new Command('sprints')
   .description('List sprints of linked project or set working sprint')
   .action(async () => {
     try {
       const ws = await getWorkspaceState();
-      const linkedId = getLinkedDashboardProjectId(ws);
-      if (!linkedId) {
+      if (!ws.linkedDashboardProjectId) {
         console.error(chalk.red('No project linked. Run hz projects open "project name" first.'));
         process.exit(2);
       }
       const projects = await getProjectsCachedOrFetch(false);
-      const project = projects.find((p) => p.id === linkedId);
+      const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
       if (!project) {
         console.error(chalk.red('Linked project not found. Run hz projects to refresh.'));
         process.exit(2);
@@ -44,7 +31,13 @@ export const sprintsCommand = new Command('sprints')
         colWidths: [4, 30, 14, 12, 12],
       });
       sprints.forEach((s, i) => {
-        table.push([i + 1, s.name ?? '-', s.status ?? '-', formatDate(s.startDate), formatDate(s.endDate)]);
+        table.push([
+          i + 1,
+          missing(s.name),
+          missing(s.status),
+          displayDateOnlyEnGB(s.startDate),
+          displayDateOnlyEnGB(s.endDate),
+        ]);
       });
       console.log(table.toString());
       console.log(chalk.dim('Use hz sprints set to set working sprint.'));
@@ -57,13 +50,12 @@ export const sprintsCommand = new Command('sprints')
     new Command('set').description('Set working sprint (interactive)').action(async () => {
       try {
         const ws = await getWorkspaceState();
-        const linkedId = getLinkedDashboardProjectId(ws);
-        if (!linkedId) {
+        if (!ws.linkedDashboardProjectId) {
           console.error(chalk.red('No project linked. Run hz projects open "project name" first.'));
           process.exit(2);
         }
         const projects = await getProjectsCachedOrFetch(false);
-        const project = projects.find((p) => p.id === linkedId);
+        const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
         if (!project) {
           console.error(chalk.red('Linked project not found. Run hz projects to refresh.'));
           process.exit(2);
@@ -76,7 +68,7 @@ export const sprintsCommand = new Command('sprints')
         }
 
         sprints.forEach((s, i) => {
-          console.log(chalk.cyan(`${i + 1}. ${s.name ?? '-'}`));
+          console.log(chalk.cyan(`${i + 1}. ${missing(s.name)}`));
         });
 
         const { sprintNum } = await prompts({
@@ -96,8 +88,9 @@ export const sprintsCommand = new Command('sprints')
           process.exit(2);
         }
 
-        await setActiveSprint(sprint.id);
-        console.log(chalk.green(`Working sprint: ${sprint.name}`));
+        const sprintId = requireStringForAction('Setting working sprint', 'sprint id', sprint.id);
+        await setActiveSprint(sprintId);
+        console.log(chalk.green(`Working sprint: ${missing(sprint.name)}`));
       } catch (err) {
         console.error(chalk.red((err as Error).message));
         process.exit(2);

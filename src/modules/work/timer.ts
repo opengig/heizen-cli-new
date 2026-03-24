@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import crypto from 'node:crypto';
-import { getLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
+import { getWorkspaceState } from '../../db/repositories/workspace.repository.js';
 import {
   addPendingWork,
   removePendingWork,
@@ -9,6 +9,7 @@ import {
 } from '../../db/repositories/pending-works.repository.js';
 import { addToRecentWorklogProjects } from '../../db/repositories/recent-worklog-projects.repository.js';
 import { createWorklogClient } from '../../api/index.js';
+import { missing, requireStringForAction } from '../common/index.js';
 import { requireWorklogAuth, formatHours } from './common/index.js';
 import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
@@ -17,22 +18,26 @@ export const startCommand = new Command('start')
   .argument('<name>', 'Work name')
   .action(async (name) => {
     try {
-      const linked = await getLinkedWorklogProject();
+      const ws = await getWorkspaceState();
+      const linked = ws.linkedWorklogProject;
       if (!linked) {
         console.error(chalk.red('No active project. Run hz work active "project name" first.'));
         process.exit(2);
       }
+
+      const projectId = requireStringForAction('Starting work', 'worklog project id', linked.id);
+      const projectName = missing(linked.name);
 
       const id = crypto.randomBytes(3).toString('hex');
       const work = {
         id,
         name: name.trim(),
         startTime: Date.now(),
-        projectId: linked.id,
-        projectName: linked.name,
+        projectId,
+        projectName,
       };
       await addPendingWork(work);
-      await addToRecentWorklogProjects({ id: linked.id, name: linked.name });
+      await addToRecentWorklogProjects({ id: projectId, name: projectName });
       console.log(chalk.green(`Started: ${work.name} (${id})`));
     } catch (err) {
       console.error(chalk.red((err as Error).message));
