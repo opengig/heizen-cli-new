@@ -1,7 +1,7 @@
 import { createDashboardClient } from '../../api/index.js';
 import { requireDashboardAuth } from '../../config/index.js';
 import { getCachedProjects, cacheProjects } from '../../db/index.js';
-import { getWorkspaceState, getLinkedDashboardProjectId } from '../../db/repositories/workspace.repository.js';
+import { getWorkspaceState } from '../../db/repositories/workspace.repository.js';
 import type { DashboardProject, FeatureTask } from '../../schemas/dashboard/index.js';
 import { missing, requireForAction } from './format.js';
 
@@ -13,6 +13,8 @@ export {
   displayDateTimeEnGB,
   displayDateOnlyEnGB,
 } from './format.js';
+
+export { parseTimeMsOrZero, parseOneBasedIndex } from './parse.js';
 
 export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
   if (active === undefined || active === false) {
@@ -43,7 +45,7 @@ export async function getSprintBoardTasks(): Promise<FeatureTask[]> {
 
 export async function getActiveSprintInfo(): Promise<{ name: string; status: string } | null> {
   const ws = await getWorkspaceState();
-  const linkedId = getLinkedDashboardProjectId(ws);
+  const linkedId = ws.linkedDashboardProjectId;
   if (!ws.activeSprintId || !linkedId) return null;
   const projects = await getProjectsCachedOrFetch(false);
   const project = projects.find((p) => p.id === linkedId);
@@ -53,7 +55,7 @@ export async function getActiveSprintInfo(): Promise<{ name: string; status: str
 
 export async function getLinkedProject(): Promise<DashboardProject> {
   const ws = await getWorkspaceState();
-  const linkedId = getLinkedDashboardProjectId(ws);
+  const linkedId = ws.linkedDashboardProjectId;
   if (!linkedId) {
     throw new Error('No project linked. Run hz projects open "project name" first.');
   }

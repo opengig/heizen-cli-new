@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getLinkedWorklogProject, setLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
+import { getWorkspaceState, setLinkedWorklogProject } from '../../db/repositories/workspace.repository.js';
 import { createWorklogClient } from '../../api/index.js';
 import { missing, requireStringForAction } from '../common/index.js';
 import { requireWorklogAuth } from './common/index.js';
@@ -21,8 +21,10 @@ export const activeCommand = new Command('active')
       const client = createWorklogClient(cookie, onUnauthorized);
       const { projects } = await client.getUserData();
 
+      const ws = await getWorkspaceState();
+      const linked = ws.linkedWorklogProject;
+
       if (!name) {
-        const linked = await getLinkedWorklogProject();
         if (!linked) {
           console.log(chalk.gray('No active project. Run hz work active "project name" to set one.'));
           return;
@@ -35,18 +37,17 @@ export const activeCommand = new Command('active')
       const exact = projects.find((p) => p.name?.toLowerCase() === q.toLowerCase());
       if (exact) {
         const id = requireStringForAction('Setting active worklog project', 'project id', exact.id);
-        const name = missing(exact.name);
-        const linked = await getLinkedWorklogProject();
+        const label = missing(exact.name);
         if (linked?.id === id) {
           console.log(chalk.green('Active project already set.'));
           return;
         }
         const prevName = linked?.name;
-        await setLinkedWorklogProject({ id, name });
+        await setLinkedWorklogProject({ id, name: exact.name });
         if (prevName) {
-          console.log(chalk.green(`Active project changed from '${prevName}' to '${name}' for this directory.`));
+          console.log(chalk.green(`Active project changed from '${prevName}' to '${label}' for this directory.`));
         } else {
-          console.log(chalk.green(`${name} project set as active for this directory.`));
+          console.log(chalk.green(`${label} project set as active for this directory.`));
         }
         return;
       }
@@ -62,18 +63,17 @@ export const activeCommand = new Command('active')
       if (filtered.length === 1) {
         const p = filtered[0];
         const id = requireStringForAction('Setting active worklog project', 'project id', p.id);
-        const name = missing(p.name);
-        const linked = await getLinkedWorklogProject();
+        const label = missing(p.name);
         if (linked?.id === id) {
           console.log(chalk.green('Active project already set.'));
           return;
         }
         const prevName = linked?.name;
-        await setLinkedWorklogProject({ id, name });
+        await setLinkedWorklogProject({ id, name: p.name });
         if (prevName) {
-          console.log(chalk.green(`Active project changed from '${prevName}' to '${name}' for this directory.`));
+          console.log(chalk.green(`Active project changed from '${prevName}' to '${label}' for this directory.`));
         } else {
-          console.log(chalk.green(`${name} project set as active for this directory.`));
+          console.log(chalk.green(`${label} project set as active for this directory.`));
         }
         return;
       }

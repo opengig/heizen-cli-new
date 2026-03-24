@@ -4,7 +4,13 @@ import Table from 'cli-table3';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getSprintBoardTasks, getActiveSprintInfo, missing, requireStringForAction } from './common/index.js';
+import {
+  getSprintBoardTasks,
+  getActiveSprintInfo,
+  missing,
+  parseOneBasedIndex,
+  requireStringForAction,
+} from './common/index.js';
 import type { UserStory } from '../schemas/dashboard/index.js';
 
 type StoryStatus = 'Done' | 'InReview' | 'Todo' | 'InProgress' | 'In Progress';
@@ -154,9 +160,9 @@ export const taskCommand = new Command('tasks')
           console.error(chalk.red('Task and story index required to update status.'));
           process.exit(1);
         }
-        const taskIndex = parseInt(taskIndexStr, 10);
-        const storyIndex = parseInt(storyIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1 || isNaN(storyIndex) || storyIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        const storyIndex = parseOneBasedIndex(storyIndexStr);
+        if (taskIndex === null || storyIndex === null) {
           console.error(chalk.red('Invalid task or story index.'));
           process.exit(1);
         }
@@ -182,9 +188,9 @@ export const taskCommand = new Command('tasks')
       }
 
       if (storyIndexStr && !statusStr) {
-        const taskIndex = parseInt(taskIndexStr, 10);
-        const storyIndex = parseInt(storyIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1 || isNaN(storyIndex) || storyIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        const storyIndex = parseOneBasedIndex(storyIndexStr);
+        if (taskIndex === null || storyIndex === null) {
           console.error(chalk.red('Invalid task or story index.'));
           process.exit(1);
         }
@@ -204,8 +210,8 @@ export const taskCommand = new Command('tasks')
       }
 
       if (taskIndexStr) {
-        const taskIndex = parseInt(taskIndexStr, 10);
-        if (isNaN(taskIndex) || taskIndex < 1) {
+        const taskIndex = parseOneBasedIndex(taskIndexStr);
+        if (taskIndex === null) {
           console.error(chalk.red('Invalid task index.'));
           process.exit(1);
         }

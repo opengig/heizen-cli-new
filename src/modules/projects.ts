@@ -1,9 +1,8 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
+import { getProjectsCachedOrFetch, missing, parseTimeMsOrZero, requireStringForAction } from './common/index.js';
 import {
-  getLinkedDashboardProjectId,
   setLinkedDashboardProject,
   setActiveSprint,
   getWorkspaceState,
@@ -11,11 +10,7 @@ import {
 import type { DashboardProject, Sprint } from '../schemas/dashboard/index.js';
 
 function sortSprintsByLatest(sprints: Sprint[]): Sprint[] {
-  return [...sprints].sort((a, b) => {
-    const tb = b.endDate && !Number.isNaN(Date.parse(b.endDate)) ? new Date(b.endDate).getTime() : 0;
-    const ta = a.endDate && !Number.isNaN(Date.parse(a.endDate)) ? new Date(a.endDate).getTime() : 0;
-    return tb - ta;
-  });
+  return [...sprints].sort((a, b) => parseTimeMsOrZero(b.endDate) - parseTimeMsOrZero(a.endDate));
 }
 
 function getLatestSprint(sprints: Sprint[]): Sprint | null {
@@ -104,11 +99,11 @@ const projectsCommand = new Command('projects')
           const projects = await getProjectsCachedOrFetch(false);
 
           if (!name) {
-            if (!getLinkedDashboardProjectId(ws)) {
+            if (!ws.linkedDashboardProjectId) {
               console.log(chalk.gray('No project linked. Run hz projects open "project name".'));
               return;
             }
-            const project = projects.find((p) => p.id === getLinkedDashboardProjectId(ws));
+            const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
             if (!project) {
               console.log(chalk.gray('Linked project not found. Run hz projects open "project name" to re-link.'));
               return;

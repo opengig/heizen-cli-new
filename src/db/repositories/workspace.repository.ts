@@ -1,15 +1,11 @@
 import { getDb, getWorkspaceKey } from '../core.js';
 import type { WorkspaceState } from '../../schemas/db.js';
+import { requireForAction } from '../../modules/common/format.js';
 
 export async function getWorkspaceState(): Promise<WorkspaceState> {
   const db = await getDb();
   const key = getWorkspaceKey();
   return db.data.workspaces[key] ?? {};
-}
-
-/** Linked dashboard project ID (separate from worklog). Use this for dashboard commands. */
-export function getLinkedDashboardProjectId(ws: WorkspaceState): string | undefined {
-  return ws.linkedDashboardProjectId ?? ws.linkedProjectId;
 }
 
 export async function setLinkedDashboardProject(projectId: string): Promise<void> {
@@ -20,13 +16,13 @@ export async function setLinkedDashboardProject(projectId: string): Promise<void
   await db.write();
 }
 
-export async function setLinkedWorklogProject(projectOrId: string | { id: string; name: string }): Promise<void> {
+/** Persist linked worklog project; display formatting is done when reading (see `linkedWorklogProjectFromWorkspace`). */
+export async function setLinkedWorklogProject(project: { id: string; name?: string | null }): Promise<void> {
+  requireForAction('Setting linked worklog project', 'project id', project.id);
   const db = await getDb();
   const key = getWorkspaceKey();
   if (!db.data.workspaces[key]) db.data.workspaces[key] = {};
-  const project = typeof projectOrId === 'string' ? { id: projectOrId, name: projectOrId } : projectOrId;
-  db.data.workspaces[key].linkedWorklogProjectId = project.id;
-  db.data.workspaces[key].linkedWorklogProject = project;
+  db.data.workspaces[key].linkedWorklogProject = { id: project.id, name: project.name };
   await db.write();
 }
 
@@ -36,15 +32,4 @@ export async function setActiveSprint(sprintId: string): Promise<void> {
   if (!db.data.workspaces[key]) db.data.workspaces[key] = {};
   db.data.workspaces[key].activeSprintId = sprintId;
   await db.write();
-}
-
-export async function getLinkedWorklogProject(): Promise<{ id: string; name: string } | null> {
-  const db = await getDb();
-  const key = getWorkspaceKey();
-  const ws = db.data.workspaces[key];
-  if (ws?.linkedWorklogProject) return ws.linkedWorklogProject;
-  if (ws?.linkedWorklogProjectId) {
-    return { id: ws.linkedWorklogProjectId, name: ws.linkedWorklogProjectId };
-  }
-  return null;
 }

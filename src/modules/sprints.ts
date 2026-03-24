@@ -2,11 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
 import prompts from 'prompts';
-import {
-  getWorkspaceState,
-  getLinkedDashboardProjectId,
-  setActiveSprint,
-} from '../db/repositories/workspace.repository.js';
+import { getWorkspaceState, setActiveSprint } from '../db/repositories/workspace.repository.js';
 import { displayDateOnlyEnGB, getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
 import { sortSprintsByLatest } from './projects.js';
 
@@ -15,13 +11,12 @@ export const sprintsCommand = new Command('sprints')
   .action(async () => {
     try {
       const ws = await getWorkspaceState();
-      const linkedId = getLinkedDashboardProjectId(ws);
-      if (!linkedId) {
+      if (!ws.linkedDashboardProjectId) {
         console.error(chalk.red('No project linked. Run hz projects open "project name" first.'));
         process.exit(2);
       }
       const projects = await getProjectsCachedOrFetch(false);
-      const project = projects.find((p) => p.id === linkedId);
+      const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
       if (!project) {
         console.error(chalk.red('Linked project not found. Run hz projects to refresh.'));
         process.exit(2);
@@ -55,13 +50,12 @@ export const sprintsCommand = new Command('sprints')
     new Command('set').description('Set working sprint (interactive)').action(async () => {
       try {
         const ws = await getWorkspaceState();
-        const linkedId = getLinkedDashboardProjectId(ws);
-        if (!linkedId) {
+        if (!ws.linkedDashboardProjectId) {
           console.error(chalk.red('No project linked. Run hz projects open "project name" first.'));
           process.exit(2);
         }
         const projects = await getProjectsCachedOrFetch(false);
-        const project = projects.find((p) => p.id === linkedId);
+        const project = projects.find((p) => p.id === ws.linkedDashboardProjectId);
         if (!project) {
           console.error(chalk.red('Linked project not found. Run hz projects to refresh.'));
           process.exit(2);

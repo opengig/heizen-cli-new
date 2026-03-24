@@ -3,7 +3,14 @@ import chalk from 'chalk';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { displayDateTimeEnGB, getLinkedProject, missing, requireStringForAction } from './common/index.js';
+import {
+  displayDateTimeEnGB,
+  getLinkedProject,
+  missing,
+  parseOneBasedIndex,
+  parseTimeMsOrZero,
+  requireStringForAction,
+} from './common/index.js';
 import type { MeetingRecord } from '../schemas/dashboard/index.js';
 
 function formatDuration(seconds: number): string {
@@ -48,15 +55,11 @@ export const meetingsCommand = new Command('meetings')
         return;
       }
 
-      const sorted = [...meetings].sort((a, b) => {
-        const tb = b.createdAt && !Number.isNaN(Date.parse(b.createdAt)) ? new Date(b.createdAt).getTime() : 0;
-        const ta = a.createdAt && !Number.isNaN(Date.parse(a.createdAt)) ? new Date(a.createdAt).getTime() : 0;
-        return tb - ta;
-      });
+      const sorted = [...meetings].sort((a, b) => parseTimeMsOrZero(b.createdAt) - parseTimeMsOrZero(a.createdAt));
 
       if (opts.summary || opts.transcript) {
-        const idx = parseInt(meetingIndexStr ?? '', 10);
-        if (isNaN(idx) || idx < 1) {
+        const idx = parseOneBasedIndex(meetingIndexStr);
+        if (idx === null) {
           console.error(chalk.red('Meeting index required for --summary or --transcript. Example: hz meetings 4 -s'));
           process.exit(1);
         }
@@ -80,8 +83,8 @@ export const meetingsCommand = new Command('meetings')
       }
 
       if (meetingIndexStr) {
-        const idx = parseInt(meetingIndexStr, 10);
-        if (isNaN(idx) || idx < 1) {
+        const idx = parseOneBasedIndex(meetingIndexStr);
+        if (idx === null) {
           console.error(chalk.red('Invalid meeting index.'));
           process.exit(1);
         }
