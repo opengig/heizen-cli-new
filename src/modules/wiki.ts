@@ -3,7 +3,13 @@ import chalk from 'chalk';
 import Table from 'cli-table3';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { displayDateTimeEnGB, getLinkedProject, missing, requireStringForAction } from './common/index.js';
+import {
+  displayDateTimeEnGB,
+  getLinkedProject,
+  missing,
+  parseOneBasedIndex,
+  requireStringForAction,
+} from './common/index.js';
 import type { DocumentNode, ProjectDocument } from '../schemas/dashboard/index.js';
 
 function flattenWikiNodes(nodes: DocumentNode[]): DocumentNode[] {
@@ -49,8 +55,8 @@ export const wikiCommand = new Command('wiki')
       }
 
       if (docIndexStr) {
-        const idx = parseInt(docIndexStr, 10);
-        if (isNaN(idx) || idx < 1) {
+        const idx = parseOneBasedIndex(docIndexStr);
+        if (idx === null) {
           console.error(chalk.red('Invalid document index.'));
           process.exit(1);
         }

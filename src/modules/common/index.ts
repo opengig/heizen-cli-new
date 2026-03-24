@@ -14,6 +14,8 @@ export {
   displayDateOnlyEnGB,
 } from './format.js';
 
+export { parseTimeMsOrZero, parseOneBasedIndex } from './parse.js';
+
 export async function getProjectsCachedOrFetch(active?: boolean): Promise<DashboardProject[]> {
   if (active === undefined || active === false) {
     const cached = await getCachedProjects();

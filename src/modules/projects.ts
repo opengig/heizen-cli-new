@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
+import { getProjectsCachedOrFetch, missing, parseTimeMsOrZero, requireStringForAction } from './common/index.js';
 import {
   setLinkedDashboardProject,
   setActiveSprint,
@@ -10,11 +10,7 @@ import {
 import type { DashboardProject, Sprint } from '../schemas/dashboard/index.js';
 
 function sortSprintsByLatest(sprints: Sprint[]): Sprint[] {
-  return [...sprints].sort((a, b) => {
-    const tb = b.endDate && !Number.isNaN(Date.parse(b.endDate)) ? new Date(b.endDate).getTime() : 0;
-    const ta = a.endDate && !Number.isNaN(Date.parse(a.endDate)) ? new Date(a.endDate).getTime() : 0;
-    return tb - ta;
-  });
+  return [...sprints].sort((a, b) => parseTimeMsOrZero(b.endDate) - parseTimeMsOrZero(a.endDate));
 }
 
 function getLatestSprint(sprints: Sprint[]): Sprint | null {
