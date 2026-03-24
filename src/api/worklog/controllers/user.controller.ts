@@ -1,6 +1,5 @@
-import { z } from 'zod';
 import type { WorklogServiceClient } from '../client.js';
-import { WorklogProjectSchema, type WorklogProject } from '../../../schemas/worklog.js';
+import type { WorklogProject } from '../../../schemas/worklog.js';
 import { parseFlight } from '../utils.js';
 
 export async function getUserData(
@@ -33,10 +32,6 @@ export async function getUserData(
     return { userId: '', projects: [] };
   }
 
-  const validated = z.array(WorklogProjectSchema).safeParse(extractedProjects);
-  if (!validated.success) {
-    console.error('User data schema validation failed:', validated.error.format());
-    return { userId, projects: [] };
-  }
-  return { userId, projects: validated.data };
+  const projects = Array.isArray(extractedProjects) ? (extractedProjects as WorklogProject[]) : [];
+  return { userId, projects };
 }

@@ -2,6 +2,7 @@ import { Command } from 'commander';
 import chalk from 'chalk';
 import { getRecentWorklogProjects } from '../../db/repositories/recent-worklog-projects.repository.js';
 import { createWorklogClient } from '../../api/index.js';
+import { missing } from '../common/index.js';
 import { requireWorklogAuth } from './common/index.js';
 import { clearWorklogAuth } from '../../db/repositories/worklog-auth.repository.js';
 
@@ -30,7 +31,7 @@ export const projectsCommand = new Command('projects')
           console.log(chalk.gray('No projects found.'));
           return;
         }
-        list.forEach((p) => console.log(p.name));
+        list.forEach((p) => console.log(missing(p.name)));
         return;
       }
 
@@ -40,14 +41,14 @@ export const projectsCommand = new Command('projects')
           console.log(chalk.gray('No projects found.'));
           return;
         }
-        projects.slice(0, 10).forEach((p) => console.log(p.name));
+        projects.slice(0, 10).forEach((p) => console.log(missing(p.name)));
         if (projects.length >= 10) {
           console.log(chalk.dim('Use hz work projects --all to see all projects.'));
         }
         return;
       }
 
-      recent.forEach((p) => console.log(p.name));
+      recent.forEach((p) => console.log(missing(p.name)));
       if (recent.length >= 10) {
         console.log(chalk.dim('Use hz work projects --all to see all projects.'));
       }

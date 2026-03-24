@@ -3,7 +3,7 @@ import chalk from 'chalk';
 import prompts from 'prompts';
 import { createDashboardClient } from '../api/index.js';
 import { requireDashboardAuth } from '../config/index.js';
-import { getLinkedProject } from './common/index.js';
+import { displayDateTimeEnGB, getLinkedProject, missing, requireStringForAction } from './common/index.js';
 import type { MeetingRecord } from '../schemas/dashboard/index.js';
 
 function formatDuration(seconds: number): string {
@@ -13,23 +13,19 @@ function formatDuration(seconds: number): string {
   return `${m}m ${s}s`;
 }
 
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('en-GB', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function printMeetingDetails(meeting: MeetingRecord) {
-  const creatorName = [meeting.creator.first_name, meeting.creator.last_name].filter(Boolean).join(' ') || '—';
-  console.log(chalk.bold(meeting.title));
+  const creator = meeting.creator;
+  const creatorName = creator ? [creator.first_name, creator.last_name].filter(Boolean).join(' ') || '—' : '—';
+  console.log(chalk.bold(missing(meeting.title)));
   console.log('');
-  console.log(chalk.dim(`Date: ${formatDateTime(meeting.metadata.startDate)}`));
+  console.log(chalk.dim(`Date: ${displayDateTimeEnGB(meeting.metadata?.startDate)}`));
   console.log(chalk.dim(`Creator: ${creatorName}`));
-  console.log(chalk.dim(`Duration: ${formatDuration(meeting.metadata.durationInSeconds)}`));
+  const durationSec = meeting.metadata?.durationInSeconds;
+  console.log(
+    chalk.dim(
+      `Duration: ${durationSec != null && !Number.isNaN(Number(durationSec)) ? formatDuration(Number(durationSec)) : missing(durationSec)}`
+    )
+  );
   console.log(chalk.dim(`Stories created: ${meeting.isStoriesCreated ? 'Yes' : 'No'}`));
   console.log('');
 }
@@ -42,16 +38,21 @@ export const meetingsCommand = new Command('meetings')
   .action(async (meetingIndexStr, opts) => {
     try {
       const project = await getLinkedProject();
+      const projectId = requireStringForAction('Listing meetings', 'project id', project.id);
       const token = await requireDashboardAuth();
       const client = createDashboardClient(token);
-      const meetings = await client.getMeetingRecords(project.id);
+      const meetings = await client.getMeetingRecords(projectId);
 
       if (meetings.length === 0) {
         console.log(chalk.gray('No meetings in this project.'));
         return;
       }
 
-      const sorted = [...meetings].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      const sorted = [...meetings].sort((a, b) => {
+        const tb = b.createdAt && !Number.isNaN(Date.parse(b.createdAt)) ? new Date(b.createdAt).getTime() : 0;
+        const ta = a.createdAt && !Number.isNaN(Date.parse(a.createdAt)) ? new Date(a.createdAt).getTime() : 0;
+        return tb - ta;
+      });
 
       if (opts.summary || opts.transcript) {
         const idx = parseInt(meetingIndexStr ?? '', 10);
@@ -95,7 +96,7 @@ export const meetingsCommand = new Command('meetings')
       }
 
       sorted.forEach((m, i) => {
-        console.log(chalk.cyan(`${i + 1}. ${m.title}`));
+        console.log(chalk.cyan(`${i + 1}. ${missing(m.title)}`));
       });
 
       const { meetingNum } = await prompts({

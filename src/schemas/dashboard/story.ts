@@ -1,79 +1,73 @@
-import { z } from 'zod';
-
 /** User reference (assignee, creator) */
-const UserRefSchema = z.object({
-  id: z.string(),
-  firstName: z.string(),
-  lastName: z.string(),
-  avatarUrl: z.string().nullable(),
-  email: z.string(),
-});
+export interface UserRef {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string | null;
+  email?: string;
+}
 
 /** Project reference in story */
-const ProjectRefSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  uniqueName: z.string(),
-});
+export interface ProjectRef {
+  id?: string;
+  title?: string;
+  uniqueName?: string;
+}
 
 /** Sprint reference */
-const SprintRefSchema = z.object({
-  id: z.string(),
-  name: z.string(),
-});
+export interface SprintRef {
+  id?: string;
+  name?: string;
+}
 
 /** Task reference */
-const TaskRefSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  type: z.string(),
-});
+export interface TaskRef {
+  id?: string;
+  title?: string;
+  type?: string;
+}
 
-const StoryStatusSchema = z.enum(['Done', 'InReview', 'Todo', 'InProgress', 'In Progress']);
+export type StoryStatus = 'Done' | 'InReview' | 'Todo' | 'InProgress' | 'In Progress' | string;
 
 /** User story - full object for GET /tasks/user-stories/story/{id} and sprint board */
-export const UserStorySchema = z.object({
-  id: z.string(),
-  projectId: z.string(),
-  sprintId: z.string().nullable(),
-  title: z.string(),
-  description: z.string(),
-  estimation: z.number(),
-  order: z.number().nullable(),
-  storyNumber: z.number(),
-  figmaImages: z.array(z.any()),
-  acceptanceCriteria: z.array(z.union([z.string(), z.object({ criteria: z.string(), isCompleted: z.boolean() })])),
-  status: StoryStatusSchema,
-  assignedTo: z.string().nullable(),
-  priority: z.number(),
-  assignee: UserRefSchema.nullable(),
-  creator: UserRefSchema.nullable(),
-  testCases: z.array(z.any()),
-  storyGithubPRs: z.array(z.any()),
-  project: ProjectRefSchema,
-  sprint: SprintRefSchema.nullable(),
-  task: TaskRefSchema,
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export type UserStory = z.infer<typeof UserStorySchema>;
+export interface UserStory {
+  id?: string;
+  projectId?: string;
+  sprintId?: string | null;
+  title?: string;
+  description?: string;
+  estimation?: number;
+  order?: number | null;
+  storyNumber?: number;
+  figmaImages?: unknown[];
+  acceptanceCriteria?: unknown[];
+  status?: StoryStatus;
+  assignedTo?: string | null;
+  priority?: number;
+  assignee?: UserRef | null;
+  creator?: UserRef | null;
+  testCases?: unknown[];
+  storyGithubPRs?: unknown[];
+  project?: ProjectRef;
+  sprint?: SprintRef | null;
+  task?: TaskRef;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 /** FeatureTask - task with stories (sprint board response) */
-export const FeatureTaskSchema = z.object({
-  id: z.string(),
-  title: z.string(),
-  description: z.string(),
-  type: z.string(),
-  storyStatus: z.string(),
-  sprintId: z.string(),
-  projectId: z.string(),
-  stories: z.array(UserStorySchema),
-  createdAt: z.string(),
-  updatedAt: z.string(),
-});
-export type FeatureTask = z.infer<typeof FeatureTaskSchema>;
+export interface FeatureTask {
+  id?: string;
+  title?: string;
+  description?: string;
+  type?: string;
+  storyStatus?: string;
+  sprintId?: string;
+  projectId?: string;
+  stories?: UserStory[];
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 /** Response from GET /tasks/sprint-board/{sprintId} - array of FeatureTask */
-export const SprintBoardResponseSchema = z.array(FeatureTaskSchema);
-
-export type SprintBoardResponse = z.infer<typeof SprintBoardResponseSchema>;
+export type SprintBoardResponse = FeatureTask[];

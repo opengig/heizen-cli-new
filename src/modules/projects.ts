@@ -1,7 +1,7 @@
 import { Command } from 'commander';
 import chalk from 'chalk';
 import Table from 'cli-table3';
-import { getProjectsCachedOrFetch } from './common/index.js';
+import { getProjectsCachedOrFetch, missing, requireStringForAction } from './common/index.js';
 import {
   getLinkedDashboardProjectId,
   setLinkedDashboardProject,
@@ -11,7 +11,11 @@ import {
 import type { DashboardProject, Sprint } from '../schemas/dashboard/index.js';
 
 function sortSprintsByLatest(sprints: Sprint[]): Sprint[] {
-  return [...sprints].sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime());
+  return [...sprints].sort((a, b) => {
+    const tb = b.endDate && !Number.isNaN(Date.parse(b.endDate)) ? new Date(b.endDate).getTime() : 0;
+    const ta = a.endDate && !Number.isNaN(Date.parse(a.endDate)) ? new Date(a.endDate).getTime() : 0;
+    return tb - ta;
+  });
 }
 
 function getLatestSprint(sprints: Sprint[]): Sprint | null {
@@ -67,9 +71,9 @@ const projectsCommand = new Command('projects')
           if (left > 0) parts.push(`left:${left}`);
           if (paused > 0) parts.push(`paused:${paused}`);
           const sprintLine = parts.length > 0 ? `Sprints: ${parts.join(', ')}` : '';
-          console.log(chalk.bold(p.title ?? p.uniqueName ?? '-'));
+          console.log(chalk.bold(missing(p.title ?? p.uniqueName)));
           if (sprintLine) console.log(sprintLine);
-          if (latest) console.log(`Latest: ${latest.name}`);
+          if (latest) console.log(`Latest: ${missing(latest.name)}`);
           console.log('');
         }
       } else {
@@ -80,7 +84,7 @@ const projectsCommand = new Command('projects')
         projects.forEach((p, i) => {
           const sprints = p.sprints ?? [];
           const latest = getLatestSprint(sprints);
-          table.push([i + 1, p.title ?? p.uniqueName ?? '-', sprints.length, latest?.name ?? '-']);
+          table.push([i + 1, missing(p.title ?? p.uniqueName), sprints.length, missing(latest?.name)]);
         });
         console.log(table.toString());
         console.log(chalk.dim('Use hz projects open "project name" to link a project.'));
@@ -111,9 +115,9 @@ const projectsCommand = new Command('projects')
             }
             const sprints = project.sprints ?? [];
             const sprint = ws.activeSprintId ? sprints.find((s) => s.id === ws.activeSprintId) : null;
-            console.log(chalk.cyan(`Project: ${project.title ?? project.uniqueName}`));
+            console.log(chalk.cyan(`Project: ${missing(project.title ?? project.uniqueName)}`));
             if (sprint) {
-              console.log(chalk.cyan(`Working sprint: ${sprint.name}`));
+              console.log(chalk.cyan(`Working sprint: ${missing(sprint.name)}`));
             } else {
               console.log(chalk.gray("No working sprint. Set using 'hz sprints set'."));
             }
@@ -122,15 +126,17 @@ const projectsCommand = new Command('projects')
 
           const project = resolveProjectByName(projects, name);
           if (project) {
-            await setLinkedDashboardProject(project.id);
+            const projectId = requireStringForAction('Linking project', 'project id', project.id);
+            await setLinkedDashboardProject(projectId);
             const sprints = project.sprints ?? [];
             const activeSprint = getLatestActiveSprint(sprints) ?? getLatestSprint(sprints);
             if (activeSprint) {
-              await setActiveSprint(activeSprint.id);
-              console.log(chalk.green(`Linked: ${project.title ?? project.uniqueName}`));
-              console.log(chalk.green(`Working sprint: ${activeSprint.name}`));
+              const sprintId = requireStringForAction('Setting working sprint', 'sprint id', activeSprint.id);
+              await setActiveSprint(sprintId);
+              console.log(chalk.green(`Linked: ${missing(project.title ?? project.uniqueName)}`));
+              console.log(chalk.green(`Working sprint: ${missing(activeSprint.name)}`));
             } else {
-              console.log(chalk.green(`Linked: ${project.title ?? project.uniqueName}`));
+              console.log(chalk.green(`Linked: ${missing(project.title ?? project.uniqueName)}`));
               console.log(chalk.gray('No sprints in this project.'));
             }
             return;
@@ -150,7 +156,7 @@ const projectsCommand = new Command('projects')
             process.exit(2);
           }
           const table = new Table({ head: ['#', 'Name'], colWidths: [4, 40] });
-          filtered.slice(0, 5).forEach((p, i) => table.push([i + 1, p.title ?? p.uniqueName ?? '']));
+          filtered.slice(0, 5).forEach((p, i) => table.push([i + 1, missing(p.title ?? p.uniqueName)]));
           console.log(table.toString());
           console.error(chalk.red(`+${filtered.length - 5} more projects found.`));
           process.exit(2);
